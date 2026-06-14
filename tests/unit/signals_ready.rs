@@ -3,9 +3,6 @@ use bc_indicators::indicators::{repeat::REPEAT, trend_ma::TREND_MA};
 use bc_signals::ready::ready_imports::*;
 use bc_signals::ready::{change::CHANGE, convert::CONVERT, invert::INVERT};
 use bc_utils_lg::statics::prices::{SRC_NOMAP, SRC_TRANSPOSE};
-use bc_utils_lg::structs::settings::{
-    SETTINGS_IND, SETTINGS_INDS, SETTINGS_SIGNAL, SETTINGS_SIGNALS, SETTINGS_USED_SRC,
-};
 use bc_utils_lg::types::maps::MAP;
 
 use bc_constructor::indicators::*;
@@ -16,6 +13,9 @@ use bc_constructor::map::indicators::{
 use bc_constructor::map::signals_ready::{
     FUNCS_EXTRACT_ARGS as FUNCS_EXTRACT_ARGS_SR, get_signals_from_settings,
     get_signals_from_settings_without_bf,
+};
+use bc_constructor::settings::{
+    SETTINGS_IND, SETTINGS_INDS, SETTINGS_SIGNAL, SETTINGS_SIGNALS, SETTINGS_USED_SRC,
 };
 use bc_constructor::signals_ready::*;
 

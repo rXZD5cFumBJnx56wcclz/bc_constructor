@@ -1,10 +1,8 @@
 use bc_indicators::indicators::ready_imports::{BF_INDICATOR, Indicator};
-use bc_utils_lg::{
-    structs::settings::SETTINGS_INDS,
-    types::{maps::MAP, structures::SRC_TRANSPOSE},
-};
+use bc_utils_lg::types::{maps::MAP, structures::SRC_TRANSPOSE};
 
 use crate::map::indicators::get_in_from_settings;
+use crate::settings::SETTINGS_INDS;
 
 pub struct IndicatorsGateway<'a> {
     pub indicators: &'a MAP<&'a str, (BF_INDICATOR<'a>, Box<dyn Indicator>)>,

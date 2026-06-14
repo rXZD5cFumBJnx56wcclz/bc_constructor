@@ -6,9 +6,10 @@ use bc_indicators::indicators::{
     osc_mult::OSC_MULT, percent::PERCENT, plus::PLUS, profit_factor::PROFIT_FACTOR, rem::REM,
     repeat::REPEAT, rma::RMA, rsi::RSI, sma::SMA, trend_ma::TREND_MA,
 };
-use bc_utils_lg::structs::settings::{SETTINGS_IND, SETTINGS_INDS, SETTINGS_USED_SRC};
 use bc_utils_lg::types::maps::MAP;
 use bc_utils_lg::types::structures::SRC_TRANSPOSE;
+
+use crate::settings::{SETTINGS_IND, SETTINGS_INDS, SETTINGS_USED_SRC};
 
 pub static INDICATORS_DEFAULT: LazyLock<fn() -> FxHashMap<&'static str, Box<dyn Indicator>>> =
     LazyLock::new(|| {

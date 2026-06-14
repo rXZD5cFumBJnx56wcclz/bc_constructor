@@ -2,11 +2,11 @@ use bc_indicators::indicators::ready_imports::Indicator;
 use bc_indicators::indicators::{rma::RMA, rsi::RSI};
 use bc_utils::nums::{coll_nz, round_f};
 use bc_utils_lg::statics::prices::{CLOSE, OPEN, OPEN_LAST, SRC_NOMAP, SRC_TRANSPOSE};
-use bc_utils_lg::structs::settings::{SETTINGS_IND, SETTINGS_INDS, SETTINGS_USED_SRC};
 use bc_utils_lg::types::maps::MAP;
 
 use bc_constructor::indicators::*;
 use bc_constructor::map::indicators::*;
+use bc_constructor::settings::{SETTINGS_IND, SETTINGS_INDS, SETTINGS_USED_SRC};
 
 #[test]
 fn indication_res_1() {

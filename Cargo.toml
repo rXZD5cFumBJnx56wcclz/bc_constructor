@@ -4,14 +4,16 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-rustc-hash = "1.1"
-# bc_indicators = {git = "https://github.com/feUHMYHiEggtcIGA/bc_indicators.git", branch = "main"}
 bc_utils_lg = {path = "../bc_utils_lg"}
-# bc_utils_lg = {git = "https://github.com/feUHMYHiEggtcIGA/bc_utils_lg.git", branch = "main"}
 bc_indicators = {path = "../bc_indicators"}
 bc_exch_api_funcs = {path = "../bc_exch_api_funcs"}
 bc_utils = {path = "../bc_utils"}
 bc_signals = {path = "../bc_signals"}
+
+rustc-hash = "1.1"
+serde ={ version = "1.0", features = ["derive"]}
+serde_json5 = "0.1"
+indexmap = {version = "2.0", features=["serde"]}
 
 [dev-dependencies]
 criterion = {version ="0.3.5", features = ["html_reports"]}

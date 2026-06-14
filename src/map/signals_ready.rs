@@ -6,11 +6,11 @@ use bc_signals::ready::{
     change::CHANGE, convert::CONVERT, filter::FILTER, invert::INVERT, osc_mult::OSC_MULT,
     pumpdump::PUMPDUMP,
 };
-use bc_utils_lg::structs::settings::{SETTINGS_INDS, SETTINGS_SIGNAL, SETTINGS_SIGNALS};
 use bc_utils_lg::types::maps::MAP;
 use bc_utils_lg::types::structures::SRC_TRANSPOSE;
 
 use crate::map::indicators::get_in_from_settings;
+use crate::settings::{SETTINGS_INDS, SETTINGS_SIGNAL, SETTINGS_SIGNALS};
 
 pub static SIGNALS_DEFAULT: LazyLock<fn() -> MAP<&'static str, Box<dyn SignalsReady>>> =
     LazyLock::new(|| {

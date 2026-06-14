@@ -1,12 +1,10 @@
 use bc_indicators::indicators::ready_imports::{BF_INDICATOR, Indicator};
 use bc_signals::ready::ready_imports::*;
-use bc_utils_lg::{
-    structs::settings::{SETTINGS_INDS, SETTINGS_SIGNALS},
-    types::{maps::MAP, structures::SRC_TRANSPOSE},
-};
+use bc_utils_lg::types::{maps::MAP, structures::SRC_TRANSPOSE};
 
 use crate::map::indicators::get_in_from_settings;
 use crate::map::signals_ready::get_signals_arg_from_settings;
+use crate::settings::{SETTINGS_INDS, SETTINGS_SIGNALS};
 
 pub struct SignalsReadyGateway<'a> {
     pub signals_ready: &'a MAP<&'a str, (BF_SIGNALS<'a>, Box<dyn SignalsReady>)>,
@@ -53,7 +51,7 @@ impl<'a> SignalsReadyGateway<'a> {
                     });
                 }
                 for ind_arg_el in &setting.1.used_ind {
-                    src_arg.push(indications[dbg!(ind_arg_el.as_str())]);
+                    src_arg.push(indications[ind_arg_el.as_str()]);
                 }
                 for signals_arg_el in &setting.1.used_signals {
                     signals_arg.push(map[signals_arg_el.as_str()].clone());

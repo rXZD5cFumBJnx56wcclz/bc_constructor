@@ -1,8 +1,8 @@
 use bc_indicators::indicators::rsi::RSI;
-use bc_utils_lg::structs::settings::{SETTINGS_IND, SETTINGS_INDS};
 use bc_utils_lg::types::maps::MAP;
 
 use bc_constructor::map::indicators::*;
+use bc_constructor::settings::{SETTINGS_IND, SETTINGS_INDS};
 
 use std::any::Any;
 

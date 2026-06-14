@@ -1,14 +1,12 @@
 use bc_utils_lg::statics::prices::SRC_TRANSPOSE;
-use bc_utils_lg::{
-    structs::settings::{SETTINGS_IND, SETTINGS_INDS, SETTINGS_USED_SRC},
-    types::maps::MAP,
-};
+use bc_utils_lg::types::maps::MAP;
 use criterion::{Criterion, criterion_group, criterion_main};
 
 use bc_constructor::indicators::IndicatorsGateway;
 use bc_constructor::map::indicators::{
     FUNCS_EXTRACT_ARGS, get_indicators_from_settings, get_indicators_from_settings_without_bf,
 };
+use bc_constructor::settings::{SETTINGS_IND, SETTINGS_INDS, SETTINGS_USED_SRC};
 
 fn get_indications_from_settings_1(c: &mut Criterion) {
     let s = SETTINGS_INDS::from_iter([(

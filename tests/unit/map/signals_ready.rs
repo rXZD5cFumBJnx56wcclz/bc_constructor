@@ -1,7 +1,7 @@
 use bc_signals::ready::pumpdump::PUMPDUMP;
-use bc_utils_lg::structs::settings::{SETTINGS_SIGNAL, SETTINGS_SIGNALS};
 
 use bc_constructor::map::signals_ready::*;
+use bc_constructor::settings::{SETTINGS_SIGNAL, SETTINGS_SIGNALS};
 
 use std::any::Any;
 
