@@ -18,7 +18,7 @@ use bc_constructor::settings::{
     SETTINGS_IND, SETTINGS_INDS, SETTINGS_SIGNAL, SETTINGS_SIGNALS, SETTINGS_USED_SRC,
 };
 
-fn get_signals_from_settings_1(c: &mut Criterion) {
+fn get_signals_ready_from_settings_1(c: &mut Criterion) {
     let s = SETTINGS_SIGNALS::from_iter([(
         "pumpdump_1".to_string(),
         SETTINGS_SIGNAL {
@@ -43,12 +43,12 @@ fn get_signals_from_settings_1(c: &mut Criterion) {
         &bind5,
     );
     let sr_gw = SignalsReadyGateway::new(&sr_bf, &bind3, &sr_without_bf, &bind4, &s, &bind6);
-    c.bench_function("get_signals_from_settings_1", |b| {
+    c.bench_function("get_signals_ready_from_settings_1", |b| {
         b.iter(|| sr_gw.get_signals_from_settings(black_box(&bind2), black_box(&SRC_TRANSPOSE)))
     });
 }
 
-fn get_signals_from_settings_2(c: &mut Criterion) {
+fn get_signals_ready_from_settings_2(c: &mut Criterion) {
     let settings_indicators = SETTINGS_INDS::from_iter([
         (
             "trend_ma_1".to_string(),
@@ -122,7 +122,7 @@ fn get_signals_from_settings_2(c: &mut Criterion) {
         &settings_signals,
         &settings_indicators,
     );
-    c.bench_function("get_signals_from_settings_2", |b| {
+    c.bench_function("get_signals_ready_from_settings_2", |b| {
         b.iter(|| {
             signals_gw.get_signals_from_settings(black_box(&indications), black_box(&SRC_TRANSPOSE))
         })
@@ -131,7 +131,7 @@ fn get_signals_from_settings_2(c: &mut Criterion) {
 
 criterion_group!(
     benches,
-    get_signals_from_settings_1,
-    get_signals_from_settings_2
+    get_signals_ready_from_settings_1,
+    get_signals_ready_from_settings_2
 );
 criterion_main!(benches);

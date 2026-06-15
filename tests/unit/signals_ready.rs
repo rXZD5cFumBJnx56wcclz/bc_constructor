@@ -20,7 +20,7 @@ use bc_constructor::settings::{
 use bc_constructor::signals_ready::*;
 
 #[test]
-fn signals_res_1() {
+fn signals_ready_res_1() {
     let settings_indicators = SETTINGS_INDS::from_iter([
         (
             "trend_ma_1".to_string(),
@@ -120,7 +120,7 @@ fn signals_res_1() {
 }
 
 #[test]
-fn signals_vec_res_1() {
+fn signals_ready_vec_res_1() {
     let settings_indicators = SETTINGS_INDS::from_iter([
         (
             "trend_ma_1".to_string(),

@@ -27,3 +27,8 @@ path = "benches/indicators.rs"
 name = "signals_ready"
 harness = false
 path = "benches/signals_ready.rs"
+
+[[bench]]
+name = "signals_train"
+harness = false
+path = "benches/signals_train.rs"
