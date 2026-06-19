@@ -1,7 +1,7 @@
 use bc_indicators::indicators::ready_imports::*;
 use bc_indicators::indicators::{repeat::REPEAT, trend_ma::TREND_MA};
 use bc_signals::ready::ready_imports::*;
-use bc_signals::ready::{change::CHANGE, convert::CONVERT, invert::INVERT};
+use bc_signals::ready::{change_signal::CHANGE_SIGNAL, convert::CONVERT, invert::INVERT};
 use bc_utils_lg::statics::prices::{SRC_NOMAP, SRC_TRANSPOSE};
 use bc_utils_lg::types::maps::MAP;
 
@@ -52,7 +52,7 @@ fn signals_ready_res_1() {
         (
             "change_1".to_string(),
             SETTINGS_SIGNAL {
-                key: "change".to_string(),
+                key: "change_signal".to_string(),
                 used_signals: vec!["convert_1".to_string()],
                 ..Default::default()
             },
@@ -98,7 +98,7 @@ fn signals_ready_res_1() {
     let res_2 = INVERT::default().signal(
         &vec![],
         &vec![vec![
-            CHANGE::default().signal(
+            CHANGE_SIGNAL::default().signal(
                 &vec![],
                 &CONVERT::default()
                     .signals_vec(
@@ -152,7 +152,7 @@ fn signals_ready_vec_res_1() {
         (
             "change_1".to_string(),
             SETTINGS_SIGNAL {
-                key: "change".to_string(),
+                key: "change_signal".to_string(),
                 used_signals: vec!["convert_1".to_string()],
                 ..Default::default()
             },
@@ -195,7 +195,7 @@ fn signals_ready_vec_res_1() {
     let res_1 = &signals_gw.get_signals_vec_from_settings(&SRC_TRANSPOSE)["invert_1"];
     let res_2 = &INVERT::default().signals_vec(
         &vec![],
-        &CHANGE::default()
+        &CHANGE_SIGNAL::default()
             .signals_vec(
                 &vec![],
                 &CONVERT::default()

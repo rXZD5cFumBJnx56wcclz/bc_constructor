@@ -4,7 +4,7 @@ use bc_indicators::indicators::ready_imports::*;
 use bc_indicators::indicators::{
     avg::AVG, div::DIV, ema::EMA, minus::MINUS, mm_scaler::MM_SCALER, mult::MULT,
     osc_mult::OSC_MULT, percent::PERCENT, plus::PLUS, profit_factor::PROFIT_FACTOR, rem::REM,
-    repeat::REPEAT, rma::RMA, rsi::RSI, sma::SMA, trend_ma::TREND_MA,
+    repeat::REPEAT, rma::RMA, rsi::RSI, sma::SMA, trend_ma::TREND_MA, wrap::WRAP,
 };
 use bc_utils_lg::types::maps::MAP;
 use bc_utils_lg::types::structures::SRC_TRANSPOSE;
@@ -31,6 +31,7 @@ pub static INDICATORS_DEFAULT: LazyLock<fn() -> FxHashMap<&'static str, Box<dyn 
                 ("sma", Box::new(SMA::default())),
                 ("trend_ma", Box::new(TREND_MA::default())),
                 ("repeat", Box::new(REPEAT::default())),
+                ("wrap", Box::new(WRAP::default())),
             ])
         }
     });
@@ -130,6 +131,14 @@ pub static FUNCS_EXTRACT_ARGS: LazyLock<
                 }) as fn(&SETTINGS_IND) -> Box<dyn Indicator>,
             ),
             (
+                "repeat",
+                (|v: &SETTINGS_IND| {
+                    let mut df = REPEAT::default();
+                    df.set_value(*v.kwargs_f64.get("value").unwrap_or(&df.value));
+                    Box::new(df) as Box<dyn Indicator>
+                }) as fn(&SETTINGS_IND) -> Box<dyn Indicator>,
+            ),
+            (
                 "percent",
                 (|_: &SETTINGS_IND| Box::new(PERCENT::default()) as Box<dyn Indicator>)
                     as fn(&SETTINGS_IND) -> Box<dyn Indicator>,
@@ -165,12 +174,9 @@ pub static FUNCS_EXTRACT_ARGS: LazyLock<
                     as fn(&SETTINGS_IND) -> Box<dyn Indicator>,
             ),
             (
-                "repeat",
-                (|v: &SETTINGS_IND| {
-                    let mut df = REPEAT::default();
-                    df.set_value(*v.kwargs_f64.get("value").unwrap_or(&df.value));
-                    Box::new(df) as Box<dyn Indicator>
-                }) as fn(&SETTINGS_IND) -> Box<dyn Indicator>,
+                "wrap",
+                (|_: &SETTINGS_IND| Box::new(WRAP::default()) as Box<dyn Indicator>)
+                    as fn(&SETTINGS_IND) -> Box<dyn Indicator>,
             ),
         ])
     }

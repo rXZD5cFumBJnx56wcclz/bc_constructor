@@ -3,8 +3,9 @@ use std::sync::LazyLock;
 use bc_indicators::indicators::ready_imports::Indicator;
 use bc_signals::ready::ready_imports::*;
 use bc_signals::ready::{
-    change::CHANGE, convert::CONVERT, filter::FILTER, invert::INVERT, osc_mult::OSC_MULT,
-    pumpdump::PUMPDUMP,
+    change_signal::CHANGE_SIGNAL, change_src::CHANGE_SRC, convert::CONVERT, copy::COPY,
+    filter::FILTER, invert::INVERT, pumpdump::PUMPDUMP, repeat::REPEAT,
+    set_probability::SET_PROBABILITY,
 };
 use bc_utils_lg::types::maps::MAP;
 use bc_utils_lg::types::structures::SRC_TRANSPOSE;
@@ -20,26 +21,14 @@ pub static SIGNALS_DEFAULT: LazyLock<fn() -> MAP<&'static str, Box<dyn SignalsRe
                     "pumpdump",
                     Box::new(PUMPDUMP::default()) as Box<dyn SignalsReady>,
                 ),
-                (
-                    "change",
-                    Box::new(CHANGE::default()) as Box<dyn SignalsReady>,
-                ),
-                (
-                    "convert",
-                    Box::new(CONVERT::default()) as Box<dyn SignalsReady>,
-                ),
-                (
-                    "filter",
-                    Box::new(FILTER::default()) as Box<dyn SignalsReady>,
-                ),
-                (
-                    "invert",
-                    Box::new(INVERT::default()) as Box<dyn SignalsReady>,
-                ),
-                (
-                    "osc_mult",
-                    Box::new(OSC_MULT::default()) as Box<dyn SignalsReady>,
-                ),
+                ("change_signal", Box::new(CHANGE_SIGNAL::default())),
+                ("convert", Box::new(CONVERT::default())),
+                ("filter", Box::new(FILTER::default())),
+                ("invert", Box::new(INVERT::default())),
+                ("set_probability", Box::new(SET_PROBABILITY::default())),
+                ("change_src", Box::new(CHANGE_SRC::default())),
+                ("copy", Box::new(COPY::default())),
+                ("repeat", Box::new(REPEAT::default())),
             ])
         }
     });
@@ -78,34 +67,93 @@ pub static FUNCS_EXTRACT_ARGS: LazyLock<
                 }) as fn(&SETTINGS_SIGNAL) -> Box<dyn SignalsReady>,
             ),
             (
-                "osc_mult",
-                (|setting: &SETTINGS_SIGNAL| {
-                    let mut df = OSC_MULT::default();
-                    df.set_th_short(*setting.kwargs_f64.get("th_short").unwrap_or(&df.th_short));
-                    df.set_th_long(*setting.kwargs_f64.get("th_long").unwrap_or(&df.th_long));
-                    df.set_max_value(*setting.kwargs_f64.get("max_value").unwrap_or(&df.max_value));
-                    Box::new(df) as Box<dyn SignalsReady>
-                }) as fn(&SETTINGS_SIGNAL) -> Box<dyn SignalsReady>,
+                "set_probability",
+                (|_: &SETTINGS_SIGNAL| Box::new(SET_PROBABILITY::new()) as Box<dyn SignalsReady>),
             ),
             (
-                "change",
-                (|_: &SETTINGS_SIGNAL| Box::new(CHANGE::new()) as Box<dyn SignalsReady>)
-                    as fn(&SETTINGS_SIGNAL) -> Box<dyn SignalsReady>,
+                "change_signal",
+                (|_: &SETTINGS_SIGNAL| Box::new(CHANGE_SIGNAL::new()) as Box<dyn SignalsReady>),
+            ),
+            (
+                "change_src",
+                (|setting: &SETTINGS_SIGNAL| {
+                    let mut df = CHANGE_SRC::default();
+                    df.set_signal_short(
+                        *setting
+                            .kwargs_f64
+                            .get("signal_short")
+                            .unwrap_or(&df.signal_short),
+                    );
+                    df.set_signal_long(
+                        *setting
+                            .kwargs_f64
+                            .get("signal_long")
+                            .unwrap_or(&df.signal_long),
+                    );
+                    df.set_signal_hold(
+                        *setting
+                            .kwargs_f64
+                            .get("signal_hold")
+                            .unwrap_or(&df.signal_hold),
+                    );
+                    Box::new(df) as Box<dyn SignalsReady>
+                }),
             ),
             (
                 "convert",
-                (|_: &SETTINGS_SIGNAL| Box::new(CONVERT::new()) as Box<dyn SignalsReady>)
-                    as fn(&SETTINGS_SIGNAL) -> Box<dyn SignalsReady>,
+                (|_: &SETTINGS_SIGNAL| Box::new(CONVERT::new()) as Box<dyn SignalsReady>),
             ),
             (
                 "invert",
-                (|_: &SETTINGS_SIGNAL| Box::new(INVERT::new()) as Box<dyn SignalsReady>)
-                    as fn(&SETTINGS_SIGNAL) -> Box<dyn SignalsReady>,
+                (|setting: &SETTINGS_SIGNAL| {
+                    let mut df = INVERT::default();
+                    df.set_signal_short(
+                        *setting
+                            .kwargs_f64
+                            .get("signal_short")
+                            .unwrap_or(&df.signal_short),
+                    );
+                    df.set_signal_long(
+                        *setting
+                            .kwargs_f64
+                            .get("signal_long")
+                            .unwrap_or(&df.signal_long),
+                    );
+                    df.set_signal_hold(
+                        *setting
+                            .kwargs_f64
+                            .get("signal_hold")
+                            .unwrap_or(&df.signal_hold),
+                    );
+                    Box::new(df) as Box<dyn SignalsReady>
+                }),
             ),
             (
                 "filter",
-                (|_: &SETTINGS_SIGNAL| Box::new(FILTER::new()) as Box<dyn SignalsReady>)
-                    as fn(&SETTINGS_SIGNAL) -> Box<dyn SignalsReady>,
+                (|_: &SETTINGS_SIGNAL| Box::new(FILTER::new()) as Box<dyn SignalsReady>),
+            ),
+            (
+                "copy",
+                (|_: &SETTINGS_SIGNAL| Box::new(COPY::new()) as Box<dyn SignalsReady>),
+            ),
+            (
+                "repeat",
+                (|setting: &SETTINGS_SIGNAL| {
+                    let mut df = REPEAT::default();
+                    df.set_value_signal(
+                        *setting
+                            .kwargs_f64
+                            .get("value_signal")
+                            .unwrap_or(&df.value_signal),
+                    );
+                    df.set_value_probability(
+                        *setting
+                            .kwargs_f64
+                            .get("value_probability")
+                            .unwrap_or(&df.value_probability),
+                    );
+                    Box::new(df) as Box<dyn SignalsReady>
+                }),
             ),
         ])
     }
