@@ -6,7 +6,7 @@ use bc_utils_lg::types::maps::MAP;
 use crate::trade::utils_cell::*;
 use crate::{settings::SETTINGS_STRATEGY, trade::statistics::StatCollector};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Order {
     pub symbol: String,
     pub side: String,
@@ -84,13 +84,14 @@ impl Order {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Position {
     pub symbol: String,
     pub side: String,
     pub qty: f64,
     pub leverage: f64,
     pub avg_open_price: f64,
+    pub position_idx: String,
     pub is_active: bool,
 }
 
@@ -101,6 +102,7 @@ impl Position {
         qty: f64,
         leverage: f64,
         avg_open_price: f64,
+        position_idx: String,
         is_active: bool,
     ) -> Self {
         Self {
@@ -109,6 +111,7 @@ impl Position {
             qty,
             leverage,
             avg_open_price,
+            position_idx,
             is_active,
         }
     }
@@ -132,8 +135,9 @@ impl Position {
     }
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct TradeCell {
+    // reffcell
     pub capital: f64,
     // key: order_link_id
     pub trigger_orders: RefCell<MAP<String, Order>>,
@@ -145,6 +149,15 @@ pub struct TradeCell {
 impl TradeCell {
     pub fn new(capital: f64) -> Self {
         Self { capital: capital, ..Self::default() }
+    }
+    pub fn push_position(&mut self, position: Position) {
+        self.positions.borrow_mut().insert(position.position_idx.clone(), position);
+    }
+    pub fn push_trigger_order(&mut self, order: Order) {
+        self.trigger_orders.borrow_mut().insert(order.order_link_id.clone(), order);
+    }
+    pub fn push_limit_order(&mut self, order: Order) {
+        self.limit_orders.borrow_mut().insert(order.order_link_id.clone(), order);
     }
 }
 

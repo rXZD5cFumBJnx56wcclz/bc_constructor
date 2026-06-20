@@ -96,33 +96,30 @@ pub fn modify_positions(
         .borrow_mut()
         .entry(order.position_idx.clone())
         .and_modify(|position| {
-            let (qty, commission) = qty_and_commission(
-                s,
-                &order.signal,
-                &order.type_,
-                position.qty,
-                order.qty_percent_of_position,
-            );
+            let commission = order.qty * if order.is_market() {s.commission_market} else {s.commission_limit};
             cell.capital -= commission;
             if order.is_reduce || !s.hedge_mode && order.side != position.side {
-                position.qty -= qty;
+                position.qty -= order.qty;
+                cell.capital += order.qty;
                 if position.qty <= 0.0 {
                     position.set_is_active(false);
                 }
             } else {
                 position.avg_open_price = (order.price + position.avg_open_price) / 2.0;
-                position.qty += qty;
+                position.qty += order.qty;
+                cell.capital -= order.qty;
             }
         })
         .or_insert_with(|| {
             let (qty, commission) = qty_and_commission(s, &order.signal, &order.type_, 0.0, 0.0);
-            cell.capital -= commission;
+            cell.capital -= commission + order.qty;
             Position::new(
                 order.symbol.clone(),
                 order.side.clone(),
                 qty,
                 order.leverage,
                 order.price,
+                order.position_idx.clone(),
                 true,
             )
         });
