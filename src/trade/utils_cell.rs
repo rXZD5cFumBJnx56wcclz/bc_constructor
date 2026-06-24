@@ -14,21 +14,20 @@ pub fn qty_and_commission(
 ) -> (f64, f64) {
     let qty_not_mult_prob = s.capital * s.percent_of_capital
         + s.amount_of_capital
-        + (position_qty * qty_percent_of_position) * s.leverage;
+        + (position_qty * qty_percent_of_position);
     match type_ {
         "market" => {
-            let qty = qty_not_mult_prob
-                * (s.market_mult_of_probability_qty * signal.probability)
-                * s.leverage;
-            (qty, s.commission_market * qty)
+            let qty = qty_not_mult_prob * (s.market_mult_of_probability_qty * signal.probability);
+            (qty, s.commission_market * qty * s.leverage)
         }
         "limit" => {
-            let qty = qty_not_mult_prob
-                * (s.limit_mult_of_probability_qty * signal.probability)
-                * s.leverage;
-            (qty, s.commission_market * qty)
+            let qty = qty_not_mult_prob * (s.limit_mult_of_probability_qty * signal.probability);
+            (qty, s.commission_limit * qty * s.leverage)
         }
-        _ => (qty_not_mult_prob, s.commission_market * qty_not_mult_prob),
+        _ => (
+            qty_not_mult_prob,
+            s.commission_market * qty_not_mult_prob * s.leverage,
+        ),
     }
 }
 
@@ -49,10 +48,9 @@ pub fn price_with_type(
     type_: &str,
 ) -> f64 {
     match type_ {
-        "last_price" => price_is_real_time(s.work_in_real_time, src),
-        "index_price" => src[7],
-        "mark_price" => src[8],
-        _ => panic!("unknown price type"),
+        "index" => src[7],
+        "mark" => src[8],
+        "last" | _ => price_is_real_time(s.work_in_real_time, src),
     }
 }
 
@@ -87,42 +85,74 @@ pub fn price_crossed(
     (crossed, direction)
 }
 
+pub fn qty_pnl(
+    s: &SETTINGS_STRATEGY,
+    qty: f64,
+    avg_open_price: f64,
+    price: f64,
+    position_idx: &str,
+) -> f64 {
+    let res = (price - avg_open_price) / avg_open_price * qty * s.leverage;
+    if position_idx == "1" {
+        res
+    } else {
+        -res
+    }
+}
+
 pub fn modify_positions(
     s: &SETTINGS_STRATEGY,
     cell: &mut TradeCell,
     order: &Order,
+    last_price: f64,
 ) {
     cell.positions
         .borrow_mut()
         .entry(order.position_idx.clone())
         .and_modify(|position| {
-            let (qty, commission) = qty_and_commission(
-                s,
-                &order.signal,
-                &order.type_,
-                position.qty,
-                order.qty_percent_of_position,
-            );
+            let order_qty = order.get_order_qty(position.qty);
+            let commission = order_qty
+                * if order.is_market() {
+                    s.commission_market
+                } else {
+                    s.commission_limit
+                }
+                * s.leverage;
             cell.capital -= commission;
             if order.is_reduce || !s.hedge_mode && order.side != position.side {
-                position.qty -= qty;
+                let qty_pnl = qty_pnl(
+                    s,
+                    order_qty,
+                    position.avg_open_price,
+                    last_price,
+                    &position.position_idx,
+                );
+                position.qty -= order_qty;
+                cell.capital += order_qty;
+                cell.capital += if position.position_idx == "1".to_string() {
+                    qty_pnl * 1.
+                } else {
+                    qty_pnl * -1.
+                };
                 if position.qty <= 0.0 {
                     position.set_is_active(false);
                 }
             } else {
                 position.avg_open_price = (order.price + position.avg_open_price) / 2.0;
-                position.qty += qty;
+                position.qty += order.qty;
+                cell.capital -= order.qty;
             }
         })
         .or_insert_with(|| {
             let (qty, commission) = qty_and_commission(s, &order.signal, &order.type_, 0.0, 0.0);
-            cell.capital -= commission;
+            cell.capital -= commission + order.qty;
             Position::new(
                 order.symbol.clone(),
                 order.side.clone(),
                 qty,
                 order.leverage,
                 order.price,
+                order.position_idx.clone(),
                 true,
             )
         });
@@ -155,7 +185,7 @@ pub fn modify_positions_or_not(
                 .borrow_mut()
                 .insert(order.order_link_id.clone(), order.clone());
         } else if order.is_market() || order.price == order.trigger_price {
-            modify_positions(s, cell, &order);
+            modify_positions(s, cell, &order, src[4]);
         }
         cell.trigger_orders
             .borrow_mut()
