@@ -141,7 +141,13 @@ fn trade_cell_step_res_1() {
             p.qty -= qty_sub;
             res.capital -= qty_sub * S.commission_market * S.leverage;
             res.capital += qty_sub;
-            res.capital += qty_pnl(&S, qty_sub, p.avg_open_price, SRC[1][4], &p.position_idx);
+            res.capital += qty_pnl(
+                S.leverage,
+                qty_sub,
+                p.avg_open_price,
+                SRC[1][4],
+                &p.position_idx,
+            );
         });
     res.trigger_orders
         .borrow_mut()
@@ -159,7 +165,13 @@ fn trade_cell_step_res_1() {
             p.qty -= qty_sub;
             res.capital -= qty_sub * S.commission_market * S.leverage;
             res.capital += qty_sub;
-            res.capital += qty_pnl(&S, qty_sub, p.avg_open_price, SRC[2][4], &p.position_idx);
+            res.capital += qty_pnl(
+                S.leverage,
+                qty_sub,
+                p.avg_open_price,
+                SRC[2][4],
+                &p.position_idx,
+            );
         });
     assert_eq!(cell, res);
     cell.step(&SRC[3], &SRC[2], Default::default(), &S, None);
@@ -174,7 +186,13 @@ fn trade_cell_step_res_1() {
             p.qty -= qty_sub;
             res.capital -= qty_sub * S.commission_market * S.leverage;
             res.capital += qty_sub;
-            res.capital += qty_pnl(&S, qty_sub, p.avg_open_price, SRC[3][4], &p.position_idx);
+            res.capital += qty_pnl(
+                S.leverage,
+                qty_sub,
+                p.avg_open_price,
+                SRC[3][4],
+                &p.position_idx,
+            );
         });
     res.positions.borrow_mut().remove("1");
     assert_eq!(cell, res);

@@ -174,6 +174,34 @@ impl Default for SETTINGS_STRATEGY {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(default)]
+pub struct SETTINGS_FILES_PATH {
+    pub script_backtest: String,
+    pub backtest: String,
+    pub backtest_data: String,
+    pub train_model: String,
+}
+
+impl Default for SETTINGS_FILES_PATH {
+    fn default() -> Self {
+        Self {
+            script_backtest: Default::default(),
+            // /23_00_24_24_06_2026/report.html
+            // /23_00_24_24_06_2026/SUIUSDT/data.dat
+            // /23_00_24_24_06_2026/SUIUSDT/stat_value.dat
+            // /23_00_24_24_06_2026/SUIUSDT/stat_values.dat
+            // /23_00_24_24_06_2026/SUIUSDT/script.gp
+            // /23_00_24_24_06_2026/SUIUSDT/backtest.svg
+            // /23_00_24_24_06_2026/SUIUSDT/capital.svg
+            // /23_00_24_24_06_2026/SUIUSDT/stat.svg
+            backtest: "target/bc_constructor/backtests/".to_string(),
+            backtest_data: Default::default(),
+            train_model: "target/bc_constructor/train_models/".to_string(),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Default, Debug)]
 #[serde(default)]
 pub struct SETTINGS {
@@ -181,4 +209,6 @@ pub struct SETTINGS {
     pub indications: SETTINGS_INDS,
     pub signals_train: SETTINGS_SIGNALS,
     pub signals_ready: SETTINGS_SIGNALS,
+    pub strategy: SETTINGS_STRATEGY,
+    pub files_path: SETTINGS_FILES_PATH,
 }

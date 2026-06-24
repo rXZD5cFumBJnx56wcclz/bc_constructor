@@ -148,6 +148,7 @@ pub struct TradeCell {
     // key: order_link_id
     pub trigger_orders: RefCell<MAP<String, Order>>,
     pub limit_orders: RefCell<MAP<String, Order>>,
+    pub market_orders: RefCell<MAP<String, Order>>,
     // key: position_idx
     pub positions: RefCell<MAP<String, Position>>,
 }
@@ -180,6 +181,14 @@ impl TradeCell {
             .borrow_mut()
             .insert(order.order_link_id.clone(), order);
     }
+    pub fn push_market_order(
+        &mut self,
+        order: Order,
+    ) {
+        self.market_orders
+            .borrow_mut()
+            .insert(order.order_link_id.clone(), order);
+    }
     pub fn push_triggers_orders<T: IntoIterator<Item = Order>>(
         &mut self,
         orders: T,
@@ -194,6 +203,14 @@ impl TradeCell {
     ) {
         for order in orders {
             self.push_limit_order(order);
+        }
+    }
+    pub fn push_market_orders<T: IntoIterator<Item = Order>>(
+        &mut self,
+        orders: T,
+    ) {
+        for order in orders {
+            self.push_market_order(order);
         }
     }
 }
@@ -228,8 +245,13 @@ impl TradeCell {
                     .borrow_mut()
                     .insert(order.order_link_id.clone(), order);
             } else {
-                modify_positions(settings, self, &order, src[4]);
+                self.market_orders
+                    .borrow_mut()
+                    .insert(order.order_link_id.clone(), order);
             }
+        }
+        for market_order in self.market_orders.clone().borrow().values() {
+            modify_positions(settings, self, market_order, src[4]);
         }
         for trigger_order in self.trigger_orders.clone().borrow().values() {
             modify_positions_or_not(settings, src, src_l, self, trigger_order);
@@ -237,12 +259,12 @@ impl TradeCell {
         for limit_order in self.limit_orders.clone().borrow().values() {
             modify_positions_or_not(settings, src, src_l, self, limit_order);
         }
+        if let Some(stat_collector) = stat_collector {
+            stat_collector.push(self.clone(), src.to_vec());
+        }
+        self.market_orders.borrow_mut().clear();
         self.trigger_orders.borrow_mut().retain(|_, v| v.is_active);
         self.limit_orders.borrow_mut().retain(|_, v| v.is_active);
         self.positions.borrow_mut().retain(|_, v| v.is_active);
-
-        if let Some(stat_collector) = stat_collector {
-            stat_collector.push(self.clone());
-        }
     }
 }

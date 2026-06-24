@@ -86,13 +86,13 @@ pub fn price_crossed(
 }
 
 pub fn qty_pnl(
-    s: &SETTINGS_STRATEGY,
+    leverage: f64,
     qty: f64,
     avg_open_price: f64,
     price: f64,
     position_idx: &str,
 ) -> f64 {
-    let res = (price - avg_open_price) / avg_open_price * qty * s.leverage;
+    let res = (price - avg_open_price) / avg_open_price * qty * leverage;
     if position_idx == "1" {
         res
     } else {
@@ -121,7 +121,7 @@ pub fn modify_positions(
             cell.capital -= commission;
             if order.is_reduce || !s.hedge_mode && order.side != position.side {
                 let qty_pnl = qty_pnl(
-                    s,
+                    s.leverage,
                     order_qty,
                     position.avg_open_price,
                     last_price,

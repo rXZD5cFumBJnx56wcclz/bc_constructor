@@ -65,7 +65,7 @@ fn price_crossed_res_1() {
 
 #[test]
 fn qty_pnl_res_1() {
-    assert_eq!(qty_pnl(&S, 10., 2., 3., "1"), 50.);
+    assert_eq!(qty_pnl(S.leverage, 10., 2., 3., "1"), 50.);
 }
 
 #[test]
