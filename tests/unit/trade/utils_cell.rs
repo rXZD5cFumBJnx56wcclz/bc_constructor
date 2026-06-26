@@ -70,9 +70,9 @@ fn qty_pnl_res_1() {
 
 #[test]
 fn modify_positions_res_1() {
-    let mut res = TradeCell::new(S.capital);
-    let (qty, commission) = qty_and_commission(&S, &SIGNAL, "market", 0., 0.);
     let price = SRC[1];
+    let mut res = TradeCell::new(S.capital, SRC.to_vec(), SRC_L.to_vec());
+    let (qty, commission) = qty_and_commission(&S, &SIGNAL, "market", 0., 0.);
     res.push_position(Position::new(
         "".to_string(),
         "buy".to_string(),
@@ -83,7 +83,7 @@ fn modify_positions_res_1() {
         true,
     ));
     res.capital -= qty + commission;
-    let mut cell = TradeCell::new(S.capital);
+    let mut cell = TradeCell::new(S.capital, SRC.to_vec(), SRC_L.to_vec());
     modify_positions(
         &S,
         &mut cell,
@@ -106,14 +106,13 @@ fn modify_positions_res_1() {
             "1".to_string(),
             true,
         ),
-        SRC[4],
     );
     assert_eq!(cell, res,);
 }
 
 #[test]
 fn modify_positions_or_not_res_1() {
-    let mut res = TradeCell::new(S.capital);
+    let mut res = TradeCell::new(S.capital, SRC.to_vec(), SRC_L.to_vec());
     let (qty, commission) = qty_and_commission(&S, &SIGNAL, "market", 0., 0.);
     let (_, commission_limit) = qty_and_commission(&S, &SIGNAL, "limit", 0., 0.);
     let price = SRC[1];
@@ -127,7 +126,7 @@ fn modify_positions_or_not_res_1() {
         true,
     ));
     res.capital -= qty * 2. + commission + commission_limit;
-    let mut cell = TradeCell::new(S.capital);
+    let mut cell = TradeCell::new(S.capital, SRC.to_vec(), SRC_L.to_vec());
     modify_positions(
         &S,
         &mut cell,
@@ -150,12 +149,9 @@ fn modify_positions_or_not_res_1() {
             "1".to_string(),
             true,
         ),
-        SRC[4],
     );
     modify_positions_or_not(
         &S,
-        &SRC,
-        &SRC_L,
         &mut cell,
         &Order::new(
             "".to_string(),

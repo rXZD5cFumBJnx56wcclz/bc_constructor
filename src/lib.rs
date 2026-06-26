@@ -1,3 +1,4 @@
+pub mod cli;
 pub mod indicators;
 pub mod map;
 pub mod settings;

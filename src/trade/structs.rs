@@ -145,6 +145,8 @@ impl Position {
 pub struct TradeCell {
     // reffcell
     pub capital: f64,
+    pub src: Vec<f64>,
+    pub src_l: Vec<f64>,
     // key: order_link_id
     pub trigger_orders: RefCell<MAP<String, Order>>,
     pub limit_orders: RefCell<MAP<String, Order>>,
@@ -154,8 +156,17 @@ pub struct TradeCell {
 }
 
 impl TradeCell {
-    pub fn new(capital: f64) -> Self {
-        Self { capital: capital, ..Self::default() }
+    pub fn new(
+        capital: f64,
+        src: Vec<f64>,
+        src_l: Vec<f64>,
+    ) -> Self {
+        Self {
+            capital: capital,
+            src: src,
+            src_l: src_l,
+            ..Self::default()
+        }
     }
     pub fn push_position(
         &mut self,
@@ -225,6 +236,8 @@ impl TradeCell {
         settings: &SETTINGS_STRATEGY,
         stat_collector: Option<&mut StatCollector>,
     ) {
+        self.src = src.to_vec();
+        self.src_l = src_l.to_vec();
         for order in orders {
             for sl in order.sl.iter().cloned() {
                 self.trigger_orders
@@ -251,16 +264,16 @@ impl TradeCell {
             }
         }
         for market_order in self.market_orders.clone().borrow().values() {
-            modify_positions(settings, self, market_order, src[4]);
+            modify_positions(settings, self, market_order);
         }
         for trigger_order in self.trigger_orders.clone().borrow().values() {
-            modify_positions_or_not(settings, src, src_l, self, trigger_order);
+            modify_positions_or_not(settings, self, trigger_order);
         }
         for limit_order in self.limit_orders.clone().borrow().values() {
-            modify_positions_or_not(settings, src, src_l, self, limit_order);
+            modify_positions_or_not(settings, self, limit_order);
         }
         if let Some(stat_collector) = stat_collector {
-            stat_collector.push(self.clone(), src.to_vec());
+            stat_collector.push(self.clone());
         }
         self.market_orders.borrow_mut().clear();
         self.trigger_orders.borrow_mut().retain(|_, v| v.is_active);

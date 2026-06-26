@@ -104,7 +104,6 @@ pub fn modify_positions(
     s: &SETTINGS_STRATEGY,
     cell: &mut TradeCell,
     order: &Order,
-    last_price: f64,
 ) {
     cell.positions
         .borrow_mut()
@@ -124,7 +123,7 @@ pub fn modify_positions(
                     s.leverage,
                     order_qty,
                     position.avg_open_price,
-                    last_price,
+                    cell.src[4],
                     &position.position_idx,
                 );
                 position.qty -= order_qty;
@@ -160,23 +159,21 @@ pub fn modify_positions(
 
 pub fn modify_positions_or_not(
     s: &SETTINGS_STRATEGY,
-    src: &[f64],
-    src_l: &[f64],
     cell: &mut TradeCell,
     order: &Order,
 ) {
     if {
-        let trigger_price = price_with_type(s, src, &order.trigger_by);
-        let last = price_with_type(s, src_l, &order.trigger_by);
+        let trigger_price = price_with_type(s, &cell.src, &order.trigger_by);
+        let last = price_with_type(s, &cell.src_l, &order.trigger_by);
         let (crossed, direction) = price_crossed(trigger_price, order.trigger_price, last, last);
         order.is_trigger() && crossed && direction == order.trigger_direction
     } || {
         order.is_limit()
             && price_crossed(
-                price_is_real_time(s.work_in_real_time, src),
+                price_is_real_time(s.work_in_real_time, &cell.src),
                 order.price,
-                src[2],
-                src[3],
+                cell.src[2],
+                cell.src[3],
             )
             .0
     } {
@@ -185,7 +182,7 @@ pub fn modify_positions_or_not(
                 .borrow_mut()
                 .insert(order.order_link_id.clone(), order.clone());
         } else if order.is_market() || order.price == order.trigger_price {
-            modify_positions(s, cell, &order, src[4]);
+            modify_positions(s, cell, &order);
         }
         cell.trigger_orders
             .borrow_mut()
