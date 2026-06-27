@@ -1,3 +1,5 @@
+use std::any::Any;
+
 use bc_indicators::indicators::ready_imports::Indicator;
 use bc_indicators::indicators::{rma::RMA, rsi::RSI};
 use bc_utils::nums::{coll_nz, round_f};
@@ -7,6 +9,28 @@ use bc_utils_lg::types::maps::MAP;
 use bc_constructor::indicators::*;
 use bc_constructor::map::indicators::*;
 use bc_constructor::settings::{SETTINGS_IND, SETTINGS_INDS, SETTINGS_USED_SRC};
+
+#[test]
+fn indicators_from_settings_without_bf_res_1() {
+    let settings = SETTINGS_INDS::from_iter([(
+        "rsi_1".to_string(),
+        SETTINGS_IND {
+            key: "rsi".to_string(),
+            kwargs_usize: MAP::from_iter([("window".to_string(), 10)]),
+            kwargs_f64: MAP::default(),
+            kwargs_string: MAP::default(),
+            used_src: vec![],
+            used_ind: vec![],
+            order_used: vec![],
+        },
+    )]);
+    let funcs_extract_args = FUNCS_EXTRACT_ARGS();
+    let res = get_indicators_from_settings_without_bf(&settings, &funcs_extract_args);
+    let res_1 = res.get("rsi_1").unwrap().as_ref();
+    let rsi_test_1 = RSI::new(10);
+    let rsi_test_2 = (res_1 as &dyn Any).downcast_ref::<RSI>().unwrap();
+    assert_eq!(&rsi_test_1, rsi_test_2);
+}
 
 #[test]
 fn indication_res_1() {
@@ -76,15 +100,9 @@ fn indication_res_1() {
             },
         ),
     ]);
-    let ind_without_bf = get_indicators_from_settings_without_bf(&settings, &FUNCS_EXTRACT_ARGS());
-    let ind_bf = get_indicators_from_settings(
-        &settings,
-        &FUNCS_EXTRACT_ARGS(),
-        &SRC_TRANSPOSE,
-        &ind_without_bf,
-    );
-    let indicators_gw = IndicatorsGateway::new(&ind_bf, &ind_without_bf, &settings);
-    let res_1 = indicators_gw.get_indications_from_settings(&SRC_TRANSPOSE);
+    let indicators = Indicators::new(&settings, &FUNCS_EXTRACT_ARGS(), &SRC_TRANSPOSE);
+    let indicators_gw = IndicatorsGateway::new(&indicators, &settings);
+    let res_1 = indicators_gw.indications_series(&SRC_TRANSPOSE);
     let res_2 = (RMA::new(2).ind_f(
         &RSI::new(2)
             .ind_vec(&OPEN.into_iter().map(|v| vec![v]).collect::<Vec<Vec<f64>>>())
@@ -112,15 +130,9 @@ fn indications_vec_res_1() {
             order_used: vec![],
         },
     )]);
-    let ind_without_bf = get_indicators_from_settings_without_bf(&settings, &FUNCS_EXTRACT_ARGS());
-    let ind_bf = get_indicators_from_settings(
-        &settings,
-        &FUNCS_EXTRACT_ARGS(),
-        &SRC_TRANSPOSE,
-        &ind_without_bf,
-    );
-    let indicators_gw = IndicatorsGateway::new(&ind_bf, &ind_without_bf, &settings);
-    let res_1 = indicators_gw.get_indications_vec_from_settings(&SRC_TRANSPOSE)["rsi_1"].clone();
+    let indicators = Indicators::new(&settings, &FUNCS_EXTRACT_ARGS(), &SRC_TRANSPOSE);
+    let indicators_gw = IndicatorsGateway::new(&indicators, &settings);
+    let res_1 = indicators_gw.indications_vec(&SRC_TRANSPOSE)["rsi_1"].clone();
     let res_2 = RSI::new(2).ind_vec(&SRC_NOMAP);
     assert_eq!(
         coll_nz::<Vec<f64>, _, _>(&res_1, 0.0),

@@ -1,23 +1,35 @@
+use std::any::Any;
+
 use bc_indicators::indicators::ready_imports::*;
 use bc_indicators::indicators::{repeat::REPEAT, trend_ma::TREND_MA};
 use bc_signals::ready::ready_imports::*;
-use bc_signals::ready::{change_signal::CHANGE_SIGNAL, convert::CONVERT, invert::INVERT};
+use bc_signals::ready::{
+    change_signal::CHANGE_SIGNAL, convert::CONVERT, invert::INVERT, pumpdump::PUMPDUMP,
+};
 use bc_utils_lg::statics::prices::{SRC_NOMAP, SRC_TRANSPOSE};
 use bc_utils_lg::types::maps::MAP;
 
 use bc_constructor::indicators::*;
-use bc_constructor::map::indicators::{
-    FUNCS_EXTRACT_ARGS as FUNCS_EXTRACT_ARGS_IND, get_indicators_from_settings,
-    get_indicators_from_settings_without_bf,
-};
-use bc_constructor::map::signals_ready::{
-    FUNCS_EXTRACT_ARGS as FUNCS_EXTRACT_ARGS_SR, get_signals_from_settings,
-    get_signals_from_settings_without_bf,
-};
+use bc_constructor::map::indicators::FUNCS_EXTRACT_ARGS as FUNCS_EXTRACT_ARGS_IND;
+use bc_constructor::map::signals_ready::FUNCS_EXTRACT_ARGS as FUNCS_EXTRACT_ARGS_SR;
 use bc_constructor::settings::{
     SETTINGS_IND, SETTINGS_INDS, SETTINGS_SIGNAL, SETTINGS_SIGNALS, SETTINGS_USED_SRC,
 };
 use bc_constructor::signals_ready::*;
+
+#[test]
+fn signals_from_settings_without_bf_res_1() {
+    let settings = SETTINGS_SIGNALS::from_iter([(
+        "pumpdump_1".to_string(),
+        SETTINGS_SIGNAL { key: "pumpdump".to_string(), ..Default::default() },
+    )]);
+    let funcs_extract_args = FUNCS_EXTRACT_ARGS_SR();
+    let res = get_signals_from_settings_without_bf(&settings, &funcs_extract_args);
+    let res_1 = res.get("pumpdump_1").unwrap().as_ref();
+    let rsi_test_1 = PUMPDUMP::default();
+    let rsi_test_2 = (res_1 as &dyn Any).downcast_ref::<PUMPDUMP>().unwrap();
+    assert_eq!(&rsi_test_1, rsi_test_2);
+}
 
 #[test]
 fn signals_ready_res_1() {
@@ -66,35 +78,27 @@ fn signals_ready_res_1() {
             },
         ),
     ]);
-    let ind_without_bf =
-        get_indicators_from_settings_without_bf(&settings_indicators, &FUNCS_EXTRACT_ARGS_IND());
-    let ind_bf = get_indicators_from_settings(
+    let indicators = Indicators::new(
         &settings_indicators,
         &FUNCS_EXTRACT_ARGS_IND(),
         &SRC_TRANSPOSE,
-        &ind_without_bf,
     );
-    let signals_without_bf =
-        get_signals_from_settings_without_bf(&settings_signals, &FUNCS_EXTRACT_ARGS_SR());
-    let signals_bf = get_signals_from_settings(
+    let signals = SignalsReady::new(
         &settings_signals,
         &settings_indicators,
         &FUNCS_EXTRACT_ARGS_SR(),
         &SRC_TRANSPOSE,
-        &signals_without_bf,
-        &ind_without_bf,
+        &indicators.indicators_without_bf,
     );
-    let indicators_gw = IndicatorsGateway::new(&ind_bf, &ind_without_bf, &settings_indicators);
-    let indications = indicators_gw.get_indications_from_settings(&SRC_TRANSPOSE);
-    let signals_gw = SignalsReadyGateway::new(
-        &signals_bf,
-        &ind_bf,
-        &signals_without_bf,
-        &ind_without_bf,
+    let indicators_gw = IndicatorsGateway::new(&indicators, &settings_indicators);
+    let indications = indicators_gw.indications_series(&SRC_TRANSPOSE);
+    let signals_gw = SignalReadyGateway::new(
+        &signals,
+        &indicators,
         &settings_signals,
         &settings_indicators,
     );
-    let res_1 = signals_gw.get_signals_from_settings(&indications, &SRC_TRANSPOSE)["invert_1"];
+    let res_1 = signals_gw.signals_series(&indications, &SRC_TRANSPOSE)["invert_1"];
     let res_2 = INVERT::default().signal(
         &vec![],
         &vec![vec![
@@ -166,33 +170,25 @@ fn signals_ready_vec_res_1() {
             },
         ),
     ]);
-    let ind_without_bf =
-        get_indicators_from_settings_without_bf(&settings_indicators, &FUNCS_EXTRACT_ARGS_IND());
-    let ind_bf = get_indicators_from_settings(
+    let indicators = Indicators::new(
         &settings_indicators,
         &FUNCS_EXTRACT_ARGS_IND(),
         &SRC_TRANSPOSE,
-        &ind_without_bf,
     );
-    let signals_without_bf =
-        get_signals_from_settings_without_bf(&settings_signals, &FUNCS_EXTRACT_ARGS_SR());
-    let signals_bf = get_signals_from_settings(
+    let signals = SignalsReady::new(
         &settings_signals,
         &settings_indicators,
         &FUNCS_EXTRACT_ARGS_SR(),
         &SRC_TRANSPOSE,
-        &signals_without_bf,
-        &ind_without_bf,
+        &indicators.indicators_without_bf,
     );
-    let signals_gw = SignalsReadyGateway::new(
-        &signals_bf,
-        &ind_bf,
-        &signals_without_bf,
-        &ind_without_bf,
+    let signals_gw = SignalReadyGateway::new(
+        &signals,
+        &indicators,
         &settings_signals,
         &settings_indicators,
     );
-    let res_1 = &signals_gw.get_signals_vec_from_settings(&SRC_TRANSPOSE)["invert_1"];
+    let res_1 = &signals_gw.signals_vec(&SRC_TRANSPOSE)["invert_1"];
     let res_2 = &INVERT::default().signals_vec(
         &vec![],
         &CHANGE_SIGNAL::default()

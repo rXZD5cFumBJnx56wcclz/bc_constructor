@@ -18,7 +18,7 @@ static S: LazyLock<SETTINGS_STRATEGY> = LazyLock::new(|| SETTINGS_STRATEGY {
     capital: 100.,
     percent_of_capital: 0.01,
     order_place_settings: SETTINGS_ORDER_PLACE {
-        stoploss: vec![((1., 0.), (0.5, 0.))],
+        stoploss: vec![(1., 0., 0.5)],
         ..Default::default()
     },
     ..Default::default()
@@ -32,11 +32,11 @@ fn qty_and_commision_res_1() {
     let qty = S.capital * S.percent_of_capital;
     assert_eq!(
         (qty, qty * S.commission_market * S.leverage),
-        qty_and_commission(&S, &SIGNAL, "market", 0., 0.),
+        qty_and_commission(&S, S.capital, &SIGNAL, "market", 0., 0.),
     );
     assert_eq!(
         (qty, qty * S.commission_limit * S.leverage),
-        qty_and_commission(&S, &SIGNAL, "limit", 0., 0.),
+        qty_and_commission(&S, S.capital, &SIGNAL, "limit", 0., 0.),
     );
 }
 
@@ -72,7 +72,7 @@ fn qty_pnl_res_1() {
 fn modify_positions_res_1() {
     let price = SRC[1];
     let mut res = TradeCell::new(S.capital, SRC.to_vec(), SRC_L.to_vec());
-    let (qty, commission) = qty_and_commission(&S, &SIGNAL, "market", 0., 0.);
+    let (qty, commission) = qty_and_commission(&S, res.capital, &SIGNAL, "market", 0., 0.);
     res.push_position(Position::new(
         "".to_string(),
         "buy".to_string(),
@@ -113,8 +113,8 @@ fn modify_positions_res_1() {
 #[test]
 fn modify_positions_or_not_res_1() {
     let mut res = TradeCell::new(S.capital, SRC.to_vec(), SRC_L.to_vec());
-    let (qty, commission) = qty_and_commission(&S, &SIGNAL, "market", 0., 0.);
-    let (_, commission_limit) = qty_and_commission(&S, &SIGNAL, "limit", 0., 0.);
+    let (qty, commission) = qty_and_commission(&S, res.capital, &SIGNAL, "market", 0., 0.);
+    let (_, commission_limit) = qty_and_commission(&S, res.capital, &SIGNAL, "limit", 0., 0.);
     let price = SRC[1];
     res.push_position(Position::new(
         "".to_string(),

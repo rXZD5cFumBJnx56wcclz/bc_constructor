@@ -1,18 +1,38 @@
 use bc_signals::ready::ready_trait::Signal;
+use uuid::Uuid;
 
 use crate::{
     settings::SETTINGS_STRATEGY,
     trade::structs::{Order, Position, TradeCell},
 };
 
+pub fn qty(
+    s: &SETTINGS_STRATEGY,
+    capital: f64,
+    signal: &Signal,
+    type_: &str,
+    position_qty: f64,
+    qty_percent_of_position: f64,
+) -> f64 {
+    let qty_not_mult_prob = capital * s.percent_of_capital
+        + s.amount_of_capital
+        + (position_qty * qty_percent_of_position);
+    match type_ {
+        "market" => qty_not_mult_prob * (s.market_mult_of_probability_qty * signal.probability),
+        "limit" => qty_not_mult_prob * (s.limit_mult_of_probability_qty * signal.probability),
+        _ => qty_not_mult_prob,
+    }
+}
+
 pub fn qty_and_commission(
     s: &SETTINGS_STRATEGY,
+    capital: f64,
     signal: &Signal,
     type_: &str,
     position_qty: f64,
     qty_percent_of_position: f64,
 ) -> (f64, f64) {
-    let qty_not_mult_prob = s.capital * s.percent_of_capital
+    let qty_not_mult_prob = capital * s.percent_of_capital
         + s.amount_of_capital
         + (position_qty * qty_percent_of_position);
     match type_ {
@@ -100,6 +120,19 @@ pub fn qty_pnl(
     }
 }
 
+pub fn side_signal(
+    s: &SETTINGS_STRATEGY,
+    signal: f64,
+) -> String {
+    if signal == s.signal_long {
+        "buy".to_string()
+    } else if signal == s.signal_short {
+        "sell".to_string()
+    } else {
+        Default::default()
+    }
+}
+
 pub fn modify_positions(
     s: &SETTINGS_STRATEGY,
     cell: &mut TradeCell,
@@ -143,7 +176,8 @@ pub fn modify_positions(
             }
         })
         .or_insert_with(|| {
-            let (qty, commission) = qty_and_commission(s, &order.signal, &order.type_, 0.0, 0.0);
+            let (qty, commission) =
+                qty_and_commission(s, cell.capital, &order.signal, &order.type_, 0.0, 0.0);
             cell.capital -= commission + order.qty;
             Position::new(
                 order.symbol.clone(),
@@ -189,4 +223,120 @@ pub fn modify_positions_or_not(
             .entry(order.order_link_id.clone())
             .and_modify(|v| v.set_is_active(false));
     }
+}
+
+pub fn tp_sl_orders(
+    tp_or_sl: &str,
+    s_key: fn(&SETTINGS_STRATEGY) -> &Vec<(f64, f64, f64)>,
+    s: &SETTINGS_STRATEGY,
+    symbol: &str,
+    side: &str,
+    src: &[f64],
+    signal: &Signal,
+    position_idx: &str,
+    trigger_direction: usize,
+) -> Vec<Order> {
+    s_key(s)
+        .iter()
+        .map(
+            |(percent_of_position, amount_of_position, percent_of_entry_price)| {
+                Order::new(
+                    symbol.to_string(),
+                    side.to_string(),
+                    *signal,
+                    *amount_of_position,
+                    *percent_of_position,
+                    s.leverage,
+                    0.,
+                    "market".to_string(),
+                    Default::default(),
+                    Default::default(),
+                    "last".to_string(),
+                    price_is_real_time(s.work_in_real_time, src)
+                        * (1.
+                            + *percent_of_entry_price
+                                * if position_idx == "1" {
+                                    1.
+                                } else {
+                                    -1.
+                                }
+                                * if tp_or_sl == "tp" {
+                                    1.
+                                } else {
+                                    -1.
+                                }),
+                    trigger_direction,
+                    true,
+                    Uuid::new_v4().to_string(),
+                    position_idx.to_string(),
+                    true,
+                )
+            },
+        )
+        .collect()
+}
+
+pub fn order_create(
+    s: &SETTINGS_STRATEGY,
+    cell: &TradeCell,
+    symbol: &str,
+    price: f64,
+    signal: &Signal,
+    src: &[f64],
+    type_order: &str,
+    trigger_by: &str,
+    trigger_price: f64,
+    trigger_direction: usize,
+    is_reduce: bool,
+) -> Order {
+    let position_idx = position_idx(s, signal);
+    let side = side_signal(s, signal.signal);
+    let position_not_created = cell.positions.borrow().get(&position_idx).is_none();
+    Order::new(
+        symbol.to_string(),
+        side.clone(),
+        *signal,
+        qty(s, cell.capital, signal, type_order, 0., 0.),
+        0.,
+        s.leverage,
+        price,
+        type_order.to_string(),
+        if position_not_created {
+            tp_sl_orders(
+                "tp",
+                |v| &v.order_place_settings.takeprofit,
+                s,
+                symbol,
+                &side,
+                src,
+                signal,
+                &position_idx,
+                1,
+            )
+        } else {
+            Default::default()
+        },
+        if position_not_created {
+            tp_sl_orders(
+                "sl",
+                |v| &v.order_place_settings.stoploss,
+                s,
+                symbol,
+                &side,
+                src,
+                signal,
+                &position_idx,
+                2,
+            )
+        } else {
+            Default::default()
+        },
+        trigger_by.to_string(),
+        trigger_price,
+        trigger_direction,
+        is_reduce,
+        Uuid::new_v4().to_string(),
+        position_idx,
+        true,
+    )
 }

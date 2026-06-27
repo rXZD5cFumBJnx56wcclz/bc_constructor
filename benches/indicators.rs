@@ -2,13 +2,11 @@ use bc_utils_lg::statics::prices::SRC_TRANSPOSE;
 use bc_utils_lg::types::maps::MAP;
 use criterion::{Criterion, criterion_group, criterion_main};
 
-use bc_constructor::indicators::IndicatorsGateway;
-use bc_constructor::map::indicators::{
-    FUNCS_EXTRACT_ARGS, get_indicators_from_settings, get_indicators_from_settings_without_bf,
-};
+use bc_constructor::indicators::{Indicators, IndicatorsGateway};
+use bc_constructor::map::indicators::FUNCS_EXTRACT_ARGS;
 use bc_constructor::settings::{SETTINGS_IND, SETTINGS_INDS, SETTINGS_USED_SRC};
 
-fn get_indications_from_settings_1(c: &mut Criterion) {
+fn indications_series_1(c: &mut Criterion) {
     let s = SETTINGS_INDS::from_iter([(
         "rsi_1".to_string(),
         SETTINGS_IND {
@@ -21,16 +19,14 @@ fn get_indications_from_settings_1(c: &mut Criterion) {
             order_used: vec![],
         },
     )]);
-    let ind_without_bf = get_indicators_from_settings_without_bf(&s, &FUNCS_EXTRACT_ARGS());
-    let ind_bf =
-        get_indicators_from_settings(&s, &FUNCS_EXTRACT_ARGS(), &SRC_TRANSPOSE, &ind_without_bf);
-    let indicators_gw = IndicatorsGateway::new(&ind_bf, &ind_without_bf, &s);
-    c.bench_function("get_indications_from_settings_1", |b| {
-        b.iter(|| indicators_gw.get_indications_from_settings(&SRC_TRANSPOSE))
+    let indicators = Indicators::new(&s, &FUNCS_EXTRACT_ARGS(), &SRC_TRANSPOSE);
+    let indicators_gw = IndicatorsGateway::new(&indicators, &s);
+    c.bench_function("indications_series_1", |b| {
+        b.iter(|| indicators_gw.indications_series(&SRC_TRANSPOSE))
     });
 }
 
-fn get_indications_from_settings_2(c: &mut Criterion) {
+fn indications_series_2(c: &mut Criterion) {
     let s = SETTINGS_INDS::from_iter([
         (
             "avg_1".to_string(),
@@ -74,18 +70,12 @@ fn get_indications_from_settings_2(c: &mut Criterion) {
             },
         ),
     ]);
-    let ind_without_bf = get_indicators_from_settings_without_bf(&s, &FUNCS_EXTRACT_ARGS());
-    let ind_bf =
-        get_indicators_from_settings(&s, &FUNCS_EXTRACT_ARGS(), &SRC_TRANSPOSE, &ind_without_bf);
-    let indicators_gw = IndicatorsGateway::new(&ind_bf, &ind_without_bf, &s);
-    c.bench_function("get_indications_from_settings_2", |b| {
-        b.iter(|| indicators_gw.get_indications_from_settings(&SRC_TRANSPOSE))
+    let indicators = Indicators::new(&s, &FUNCS_EXTRACT_ARGS(), &SRC_TRANSPOSE);
+    let indicators_gw = IndicatorsGateway::new(&indicators, &s);
+    c.bench_function("indications_series_2", |b| {
+        b.iter(|| indicators_gw.indications_series(&SRC_TRANSPOSE))
     });
 }
 
-criterion_group!(
-    benches,
-    get_indications_from_settings_1,
-    get_indications_from_settings_2
-);
+criterion_group!(benches, indications_series_1, indications_series_2);
 criterion_main!(benches);

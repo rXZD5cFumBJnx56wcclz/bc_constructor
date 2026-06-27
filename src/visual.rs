@@ -35,7 +35,7 @@ pub trait FileModificator {
     fn write_script(
         &self,
         path: &str,
-    ) -> std::io::Result<()>; // -> std::io::Result<()>;
+    ) -> std::io::Result<()>;
 }
 
 impl FileModificator for VisualCollector<'_> {
@@ -116,9 +116,8 @@ impl FileModificator for VisualCollector<'_> {
                 "data.dat" index 0 using "time":"exit" with points lw 6 pointtype 2 pointsize 2 linecolor rgb "#FFFFFF" notitle, \
                 "data.dat" index 0 using "time":"entry" with points pointtype 7 pointsize 2 linecolor rgb "#00C222" title "entry", \
                 "data.dat" index 0 using "time":"exit" with points lw 3 pointtype 2 pointsize 2 linecolor rgb "#C20006" title "exit", \
-                "data.dat" index 0 using "time":(column("pnl") != column("pnl") ? NaN : column("open")):"pnl" with labels boxed offset 0,1 title "pnl"
+                "data.dat" index 0 using "time":(column("pnl") != column("pnl") ? NaN : column("open")):"pnl" with labels boxed offset 0,1 title "pnl", \
                 "data.dat" index 0 using "time":(column("qty") != column("qty") ? NaN : column("open")):"pnl" with labels boxed offset 0,2 title "qty"
-
                 "##,
                 self.stat_collector.symbol,
             )?;

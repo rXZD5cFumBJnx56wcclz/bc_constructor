@@ -1,3 +1,5 @@
+#![allow(non_camel_case_types)]
+
 use std::sync::LazyLock;
 
 use bc_indicators::indicators::ready_imports::*;
@@ -7,9 +9,8 @@ use bc_indicators::indicators::{
     repeat::REPEAT, rma::RMA, rsi::RSI, sma::SMA, trend_ma::TREND_MA, wrap::WRAP,
 };
 use bc_utils_lg::types::maps::MAP;
-use bc_utils_lg::types::structures::SRC_TRANSPOSE;
 
-use crate::settings::{SETTINGS_IND, SETTINGS_INDS, SETTINGS_USED_SRC};
+use crate::settings::SETTINGS_IND;
 
 pub static INDICATORS_DEFAULT: LazyLock<fn() -> FxHashMap<&'static str, Box<dyn Indicator>>> =
     LazyLock::new(|| {
@@ -36,9 +37,9 @@ pub static INDICATORS_DEFAULT: LazyLock<fn() -> FxHashMap<&'static str, Box<dyn 
         }
     });
 
-pub static FUNCS_EXTRACT_ARGS: LazyLock<
-    fn() -> FxHashMap<&'static str, fn(&SETTINGS_IND) -> Box<dyn Indicator>>,
-> = LazyLock::new(|| {
+pub type FUNCS_EXTRACT_ARGS_TYPE = MAP<&'static str, fn(&SETTINGS_IND) -> Box<dyn Indicator>>;
+
+pub static FUNCS_EXTRACT_ARGS: LazyLock<fn() -> FUNCS_EXTRACT_ARGS_TYPE> = LazyLock::new(|| {
     || {
         FxHashMap::from_iter([
             (
@@ -181,94 +182,3 @@ pub static FUNCS_EXTRACT_ARGS: LazyLock<
         ])
     }
 });
-
-pub fn get_in_from_settings<'a>(
-    used_ind: &Vec<String>,
-    used_src: &Vec<SETTINGS_USED_SRC>,
-    order_used: &Vec<usize>,
-    settings: &SETTINGS_INDS,
-    src: &SRC_TRANSPOSE,
-    map_indicators: &MAP<&'a str, Box<dyn Indicator>>,
-) -> Vec<Vec<f64>> {
-    let mut res = vec![];
-    for used_src_el in used_src {
-        res.push({
-            let sk = &src[used_src_el.index];
-            sk[..sk.len() - used_src_el.sub_from_last_i].to_vec()
-        });
-    }
-    for used_ind_el in used_ind {
-        res.push(map_indicators[used_ind_el.as_str()].ind_vec(
-            // recursive func
-            &get_in_from_settings(
-                &settings[used_ind_el].used_ind,
-                &settings[used_ind_el].used_src,
-                &settings[used_ind_el].order_used,
-                settings,
-                src,
-                map_indicators,
-            ),
-        ));
-    }
-    if !order_used.is_empty() {
-        res = order_used.iter().map(|i| res[*i].clone()).collect();
-    }
-    if !res.is_empty() {
-        let min_len = res
-            .iter()
-            .map(|v| v.len())
-            .min()
-            .expect("this is nan or wtf");
-        res = res
-            .into_iter()
-            .map(|v| v[v.len() - min_len..].to_vec())
-            .collect::<Vec<Vec<f64>>>();
-        return (0..min_len)
-            .map(|v| res.iter().map(|v1| v1[v]).collect::<Vec<f64>>())
-            .collect::<Vec<Vec<f64>>>();
-    }
-    Default::default()
-}
-
-pub fn get_indicators_from_settings_without_bf<'a>(
-    settings: &'a SETTINGS_INDS,
-    funcs_extract_args: &FxHashMap<&'a str, fn(&SETTINGS_IND) -> Box<dyn Indicator>>,
-) -> MAP<&'a str, Box<dyn Indicator>> {
-    settings
-        .iter()
-        .map(|(indicator_name, settings_indicator)| {
-            let indicator = funcs_extract_args[settings_indicator.key.as_str()](settings_indicator);
-            (indicator_name.as_str(), indicator)
-        })
-        .collect()
-}
-
-pub fn get_indicators_from_settings<'a>(
-    settings: &'a SETTINGS_INDS,
-    funcs_extract_args: &FxHashMap<&'a str, fn(&SETTINGS_IND) -> Box<dyn Indicator>>,
-    in_: &SRC_TRANSPOSE,
-    map_indicators: &MAP<&'a str, Box<dyn Indicator>>,
-) -> MAP<&'a str, (RefCell<Vec<MAP<&'a str, Vec<f64>>>>, Box<dyn Indicator>)> {
-    settings
-        .iter()
-        .map(|(indicator_name, settings_indicator)| {
-            let indicator = funcs_extract_args[settings_indicator.key.as_str()](settings_indicator);
-            (
-                indicator_name.as_str(),
-                (
-                    indicator.bf(&get_in_from_settings(
-                        &settings_indicator.used_ind,
-                        &settings_indicator.used_src,
-                        &settings_indicator.order_used,
-                        settings,
-                        &in_.into_iter()
-                            .map(|v| v[..v.len() - 1].to_vec())
-                            .collect::<Vec<Vec<f64>>>(),
-                        map_indicators,
-                    )),
-                    indicator,
-                ),
-            )
-        })
-        .collect()
-}

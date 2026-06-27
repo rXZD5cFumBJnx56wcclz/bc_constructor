@@ -42,7 +42,7 @@ impl<'a> IntoIterator for &'a StatCollector<'a> {
     }
 }
 
-pub trait Modificator<'a> {
+pub trait StatExt<'a> {
     fn to_all(values: &[Vec<f64>]) -> Vec<f64>;
     fn to_any(values: &[Vec<f64>]) -> Vec<f64>;
     // using for market/limit/trigger orders; positions
@@ -75,14 +75,14 @@ pub trait Modificator<'a> {
             .collect()
     }
     fn to_positions_orders(&self) -> Vec<f64> {
-        <StatCollector as Modificator>::to_all(&[
+        <StatCollector as StatExt>::to_all(&[
             self.to_some(|v| v.positions.borrow()),
             self.to_entry_and_exit(),
         ])
     }
 }
 
-impl Modificator<'_> for StatCollector<'_> {
+impl StatExt<'_> for StatCollector<'_> {
     fn to_all(values: &[Vec<f64>]) -> Vec<f64> {
         let first = values.first().unwrap();
         (0..first.len())
@@ -145,8 +145,8 @@ impl Modificator<'_> for StatCollector<'_> {
             .collect()
     }
     fn to_entry(&self) -> Vec<f64> {
-        <StatCollector as Modificator>::to_all(&[
-            <StatCollector as Modificator>::to_any(&[
+        <StatCollector as StatExt>::to_all(&[
+            <StatCollector as StatExt>::to_any(&[
                 self.to_some(|c| c.market_orders.borrow()),
                 self.into_iter()
                     .map(|c| {
@@ -188,11 +188,11 @@ impl Modificator<'_> for StatCollector<'_> {
                 .zip(self.to_capital())
                 .zip(self.to_entry())
                 .zip(self.to_exit())
-                .zip(<StatCollector as Modificator>::to_all(&[
+                .zip(<StatCollector as StatExt>::to_all(&[
                     self.to_exit(),
                     self.to_pnl(),
                 ]))
-                .zip(<StatCollector as Modificator>::to_all(&[
+                .zip(<StatCollector as StatExt>::to_all(&[
                     self.into_iter()
                         .map(|c| c.positions.borrow().values().next().unwrap().qty)
                         .collect(),

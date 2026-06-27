@@ -68,9 +68,9 @@ pub struct Strategy {
     #[arg(long)]
     pub limit_mult_of_probability_qty: Option<f64>,
     #[arg(long, num_args=1..)]
-    pub market_entry_orders_signals: Option<Vec<String>>,
+    pub markets_entry_orders_signals: Option<Vec<String>>,
     #[arg(long, num_args=1..)]
-    pub market_exit_orders_signals: Option<Vec<String>>,
+    pub markets_exit_orders_signals: Option<Vec<String>>,
     #[arg(long)]
     pub work_in_real_time: Option<bool>,
 }

@@ -60,12 +60,12 @@ pub fn settings_modify(
         settings.strategy.limit_mult_of_probability_qty = modify
             .limit_mult_of_probability_qty
             .unwrap_or(settings.strategy.limit_mult_of_probability_qty);
-        settings.strategy.market_entry_orders_signals = modify
-            .market_entry_orders_signals
-            .unwrap_or(settings.strategy.market_entry_orders_signals);
-        settings.strategy.market_exit_orders_signals = modify
-            .market_exit_orders_signals
-            .unwrap_or(settings.strategy.market_exit_orders_signals);
+        settings.strategy.markets_entry_orders_signals = modify
+            .markets_entry_orders_signals
+            .unwrap_or(settings.strategy.markets_entry_orders_signals);
+        settings.strategy.markets_exit_orders_signals = modify
+            .markets_exit_orders_signals
+            .unwrap_or(settings.strategy.markets_exit_orders_signals);
         settings.strategy.work_in_real_time = modify
             .work_in_real_time
             .unwrap_or(settings.strategy.work_in_real_time);
@@ -138,9 +138,9 @@ pub struct SETTINGS_ORDER_COLLECTOR {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(default)]
 pub struct SETTINGS_ORDER_PLACE {
-    // (1: (1: percent_of_position, 2: amount_of_position)), 2: (1: percent_of_entry_price, 2: price))
-    pub stoploss: Vec<((f64, f64), (f64, f64))>,
-    pub takeprofit: Vec<((f64, f64), (f64, f64))>,
+    // 1: percent_of_position, 2: amount_of_position, 3: percent_of_entry_price
+    pub stoploss: Vec<(f64, f64, f64)>,
+    pub takeprofit: Vec<(f64, f64, f64)>,
     // not work
     pub slippage_tolerance_type: String,
     // not work
@@ -188,11 +188,15 @@ pub struct SETTINGS_STRATEGY {
     pub coins_black_list: Vec<String>,
     pub market_mult_of_probability_qty: f64,
     pub limit_mult_of_probability_qty: f64,
-    pub market_entry_orders_signals: Vec<String>,
-    pub market_exit_orders_signals: Vec<String>,
+    pub markets_entry_orders_signals: Vec<String>,
+    pub markets_exit_orders_signals: Vec<String>,
     // (1: signal, 2: key_ind_for_price)
     pub limits_entry_orders_signals: Vec<(String, String)>,
     pub limits_exit_orders_signals: Vec<(String, String)>,
+    pub triggers_market_entry_orders_signals: Vec<(String, String)>,
+    pub triggers_market_exit_orders_signals: Vec<(String, String)>,
+    pub triggers_limit_entry_orders_signals: Vec<(String, String)>,
+    pub triggers_limit_exit_orders_signals: Vec<(String, String)>,
     pub order_collectors: Vec<SETTINGS_ORDER_COLLECTOR>,
     pub order_place_settings: SETTINGS_ORDER_PLACE,
     // not work
@@ -223,10 +227,14 @@ impl Default for SETTINGS_STRATEGY {
             coins_black_list: Default::default(),
             market_mult_of_probability_qty: 1.,
             limit_mult_of_probability_qty: 1.,
-            market_entry_orders_signals: Default::default(),
-            market_exit_orders_signals: Default::default(),
+            markets_entry_orders_signals: Default::default(),
+            markets_exit_orders_signals: Default::default(),
             limits_entry_orders_signals: Default::default(),
             limits_exit_orders_signals: Default::default(),
+            triggers_market_entry_orders_signals: Default::default(),
+            triggers_market_exit_orders_signals: Default::default(),
+            triggers_limit_entry_orders_signals: Default::default(),
+            triggers_limit_exit_orders_signals: Default::default(),
             order_collectors: vec![SETTINGS_ORDER_COLLECTOR {
                 key: "clear".to_string(),
                 ..Default::default()

@@ -18,7 +18,7 @@ static S: LazyLock<SETTINGS_STRATEGY> = LazyLock::new(|| SETTINGS_STRATEGY {
     capital: 100.,
     percent_of_capital: 0.01,
     order_place_settings: SETTINGS_ORDER_PLACE {
-        stoploss: vec![((1., 0.), (0.5, 0.))],
+        stoploss: vec![(1., 0., 0.5)],
         ..Default::default()
     },
     ..Default::default()
@@ -42,7 +42,8 @@ static SRC: LazyLock<Vec<Vec<f64>>> = LazyLock::new(|| {
 #[test]
 fn trade_cell_step_res_1() {
     let mut cell = TradeCell::new(S.capital, SRC_EL_L2.to_vec(), SRC_EL_L3.to_vec());
-    let (qty_market, commission_market) = qty_and_commission(&S, &SIGNAL, "market", 0., 0.);
+    let (qty_market, commission_market) =
+        qty_and_commission(&S, cell.capital, &SIGNAL, "market", 0., 0.);
     let triggers = vec![
         Order::new(
             "symbol".to_string(),
