@@ -2,7 +2,7 @@ use bc_indicators::indicators::ready_imports::{BF_INDICATOR, Indicator};
 use bc_utils_lg::types::{maps::MAP, structures::SRC_TRANSPOSE};
 use rustc_hash::FxHashMap;
 
-use crate::settings::{SETTINGS_IND, SETTINGS_INDS, SETTINGS_USED_SRC};
+use bc_utils_lg::settings::{SETTINGS_IND, SETTINGS_INDS, SETTINGS_USED_SRC};
 
 pub fn get_in_from_settings<'a>(
     used_ind: &Vec<String>,

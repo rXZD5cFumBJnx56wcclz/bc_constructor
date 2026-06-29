@@ -2,9 +2,10 @@ use std::fs::{File, copy, create_dir_all};
 use std::io::{BufWriter, Write};
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use bc_utils_lg::settings::SETTINGS;
 use bc_utils_lg::types::maps::MAP;
 
-use crate::{settings::SETTINGS, trade::statistics::StatCollector};
+use crate::trade::statistics::StatCollector;
 
 pub struct VisualCollector<'a> {
     s: &'a SETTINGS,
@@ -42,7 +43,7 @@ impl FileModificator for VisualCollector<'_> {
     fn get_data_paths(&self) -> (String, String) {
         let path = format!(
             "{}/{}/{}",
-            self.s.files_path.backtest,
+            self.s.files_path.backtest.to_str().unwrap(),
             SystemTime::now()
                 .duration_since(UNIX_EPOCH)
                 .unwrap()
@@ -96,7 +97,7 @@ impl FileModificator for VisualCollector<'_> {
         path: &str,
     ) -> std::io::Result<()> {
         create_dir_all(path)?;
-        if self.s.files_path.script_backtest.is_empty() {
+        if self.s.files_path.script_backtest.to_str().unwrap().is_empty() {
             let mut file = File::create_new(format!("{path}/{}", "script_data.plt"))?;
             writeln!(
                 file,
@@ -123,7 +124,7 @@ impl FileModificator for VisualCollector<'_> {
             )?;
         } else {
             copy(
-                self.s.files_path.script_backtest.as_str(),
+                self.s.files_path.script_backtest.to_str().unwrap(),
                 format!("{path}/script_data.plt"),
             )?;
         }

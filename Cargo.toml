@@ -10,6 +10,10 @@ bc_exch_api_funcs = {path = "../bc_exch_api_funcs"}
 bc_utils = {path = "../bc_utils"}
 bc_signals = {path = "../bc_signals"}
 
+bc_pack_indicators = {path = "../bc_pack_indicators"}
+bc_pack_signals_ready = {path = "../bc_pack_signals_ready"}
+bc_pack_signals_train = {path = "../bc_pack_signals_train"} 
+
 rustc-hash = "1.1"
 serde ={ version = "1.0", features = ["derive"]}
 serde_json5 = "0.1"

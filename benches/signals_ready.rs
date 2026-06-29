@@ -1,16 +1,16 @@
 use std::hint::black_box;
 
-use bc_constructor::signals_ready::{SignalReadyGateway, SignalsReady};
+use bc_pack_indicators::FUNCS_EXTRACT_ARGS as FUNCS_EXTRACT_ARGS_IND;
+use bc_pack_signals_ready::FUNCS_EXTRACT_ARGS as FUNCS_EXTRACT_ARGS_SR;
+use bc_utils_lg::settings::{
+    SETTINGS_IND, SETTINGS_INDS, SETTINGS_SIGNAL, SETTINGS_SIGNALS, SETTINGS_USED_SRC,
+};
 use bc_utils_lg::statics::prices::SRC_TRANSPOSE;
 use bc_utils_lg::types::maps::MAP;
 use criterion::{Criterion, criterion_group, criterion_main};
 
 use bc_constructor::indicators::{Indicators, IndicatorsGateway};
-use bc_constructor::map::indicators::FUNCS_EXTRACT_ARGS as FUNCS_EXTRACT_ARGS_IND;
-use bc_constructor::map::signals_ready::FUNCS_EXTRACT_ARGS as FUNCS_EXTRACT_ARGS_SR;
-use bc_constructor::settings::{
-    SETTINGS_IND, SETTINGS_INDS, SETTINGS_SIGNAL, SETTINGS_SIGNALS, SETTINGS_USED_SRC,
-};
+use bc_constructor::signals_ready::{SignalReadyGateway, SignalsReady};
 
 fn get_signals_ready_from_settings_1(c: &mut Criterion) {
     let s = SETTINGS_SIGNALS::from_iter([(

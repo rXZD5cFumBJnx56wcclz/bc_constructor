@@ -3,7 +3,7 @@ use bc_signals::train::ready_imports::*;
 use bc_utils_lg::types::{maps::MAP, structures::SRC_TRANSPOSE};
 
 use crate::indicators::{Indicators, get_in_from_settings};
-use crate::settings::{SETTINGS_INDS, SETTINGS_SIGNAL, SETTINGS_SIGNALS};
+use bc_utils_lg::settings::{SETTINGS_INDS, SETTINGS_SIGNAL, SETTINGS_SIGNALS};
 
 pub fn get_signals_arg_from_settings<'a>(
     used_signals: &Vec<String>,

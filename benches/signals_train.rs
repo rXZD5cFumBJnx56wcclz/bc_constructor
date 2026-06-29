@@ -1,12 +1,12 @@
 use std::hint::black_box;
 
-use bc_constructor::signals_train::{SignalTrainGateway, SignalsTrain};
+use bc_pack_signals_train::FUNCS_EXTRACT_ARGS as FUNCS_EXTRACT_ARGS_ST;
+use bc_utils_lg::settings::{SETTINGS_SIGNAL, SETTINGS_SIGNALS, SETTINGS_USED_SRC};
 use bc_utils_lg::statics::prices::SRC_TRANSPOSE;
 use bc_utils_lg::types::maps::MAP;
 use criterion::{Criterion, criterion_group, criterion_main};
 
-use bc_constructor::map::signals_train::FUNCS_EXTRACT_ARGS as FUNCS_EXTRACT_ARGS_SR;
-use bc_constructor::settings::{SETTINGS_SIGNAL, SETTINGS_SIGNALS, SETTINGS_USED_SRC};
+use bc_constructor::signals_train::{SignalTrainGateway, SignalsTrain};
 
 fn get_signals_train_from_settings_1(c: &mut Criterion) {
     let settings_signals = SETTINGS_SIGNALS::from_iter([(
@@ -26,7 +26,7 @@ fn get_signals_train_from_settings_1(c: &mut Criterion) {
     let sr = SignalsTrain::new(
         &settings_signals,
         &bind,
-        &FUNCS_EXTRACT_ARGS_SR(),
+        &FUNCS_EXTRACT_ARGS_ST(),
         &SRC_TRANSPOSE,
         &bind2,
     );

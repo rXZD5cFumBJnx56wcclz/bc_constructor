@@ -2,17 +2,17 @@ use std::any::Any;
 
 use bc_indicators::indicators::ready_imports::*;
 use bc_indicators::indicators::trend_ma::TREND_MA;
+use bc_pack_indicators::FUNCS_EXTRACT_ARGS as FUNCS_EXTRACT_ARGS_IND;
+use bc_pack_signals_train::FUNCS_EXTRACT_ARGS as FUNCS_EXTRACT_ARGS_ST;
 use bc_signals::train::mm::MM;
 use bc_signals::train::ready_imports::*;
+use bc_utils_lg::settings::{
+    SETTINGS_IND, SETTINGS_INDS, SETTINGS_SIGNAL, SETTINGS_SIGNALS, SETTINGS_USED_SRC,
+};
 use bc_utils_lg::statics::prices::{SRC_NOMAP, SRC_TRANSPOSE};
 use bc_utils_lg::types::maps::MAP;
 
 use bc_constructor::indicators::*;
-use bc_constructor::map::indicators::FUNCS_EXTRACT_ARGS as FUNCS_EXTRACT_ARGS_IND;
-use bc_constructor::map::signals_train::FUNCS_EXTRACT_ARGS as FUNCS_EXTRACT_ARGS_SR;
-use bc_constructor::settings::{
-    SETTINGS_IND, SETTINGS_INDS, SETTINGS_SIGNAL, SETTINGS_SIGNALS, SETTINGS_USED_SRC,
-};
 use bc_constructor::signals_train::*;
 
 #[test]
@@ -21,7 +21,7 @@ fn signals_from_settings_without_bf_res_1() {
         "mm_1".to_string(),
         SETTINGS_SIGNAL { key: "mm".to_string(), ..Default::default() },
     )]);
-    let funcs_extract_args = FUNCS_EXTRACT_ARGS_SR();
+    let funcs_extract_args = FUNCS_EXTRACT_ARGS_ST();
     let res = get_signals_from_settings_without_bf(&settings, &funcs_extract_args);
     let res_1 = res.get("mm_1").unwrap().as_ref();
     let rsi_test_1 = MM::default();
@@ -67,7 +67,7 @@ fn signals_train_res_1() {
     let signals = SignalsTrain::new(
         &settings_signals,
         &settings_indicators,
-        &FUNCS_EXTRACT_ARGS_SR(),
+        &FUNCS_EXTRACT_ARGS_ST(),
         &SRC_TRANSPOSE,
         &indicators.indicators_without_bf,
     );
@@ -134,7 +134,7 @@ fn signals_train_vec_res_1() {
     let signals = SignalsTrain::new(
         &settings_signals,
         &settings_indicators,
-        &FUNCS_EXTRACT_ARGS_SR(),
+        &FUNCS_EXTRACT_ARGS_ST(),
         &SRC_TRANSPOSE,
         &indicators.indicators_without_bf,
     );

@@ -1,13 +1,13 @@
 use std::sync::LazyLock;
 
-use bc_constructor::settings::SETTINGS_ORDER_PLACE;
 use bc_constructor::trade::structs::{Order, Position, TradeCell};
 use bc_constructor::trade::utils_cell::{qty_and_commission, qty_pnl};
 use bc_signals::ready::ready_trait::Signal;
+use bc_utils_lg::settings::SETTINGS_ORDER_PLACE;
 
-use bc_constructor::settings::SETTINGS_STRATEGY;
+use bc_utils_lg::settings::SETTINGS_TRADE;
 
-static S: LazyLock<SETTINGS_STRATEGY> = LazyLock::new(|| SETTINGS_STRATEGY {
+static S: LazyLock<SETTINGS_TRADE> = LazyLock::new(|| SETTINGS_TRADE {
     signal_hold: 0.,
     signal_short: -1.,
 

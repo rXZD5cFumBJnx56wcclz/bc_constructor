@@ -1,27 +1,25 @@
 use core::f64;
 use std::cell::Ref;
 
+use bc_utils_lg::settings::{SETTINGS, SETTINGS_TRADE};
 use bc_utils_lg::types::maps::MAP;
 use num_traits::Float;
 
-use crate::{
-    settings::SETTINGS_STRATEGY,
-    trade::{
-        structs::TradeCell,
-        utils_cell::{price_is_real_time, qty_pnl},
-    },
+use crate::trade::{
+    structs::TradeCell,
+    utils_cell::{price_is_real_time, qty_pnl},
 };
 
 pub struct StatCollector<'a> {
     pub symbol: String,
     pub cells: Vec<TradeCell>,
-    s: &'a SETTINGS_STRATEGY,
+    s: &'a SETTINGS_TRADE,
 }
 
 impl<'a> StatCollector<'a> {
     pub fn new(
         symbol: String,
-        s: &'a SETTINGS_STRATEGY,
+        s: &'a SETTINGS_TRADE,
     ) -> Self {
         Self { symbol, cells: Vec::new(), s }
     }

@@ -1,10 +1,11 @@
 use std::cell::RefCell;
 
 use bc_signals::ready::ready_trait::Signal;
+use bc_utils_lg::settings::SETTINGS_TRADE;
 use bc_utils_lg::types::maps::MAP;
 
+use crate::trade::statistics::StatCollector;
 use crate::trade::utils_cell::*;
-use crate::{settings::SETTINGS_STRATEGY, trade::statistics::StatCollector};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Order {
@@ -74,6 +75,7 @@ impl Order {
         self.type_ == "market"
     }
     pub fn is_trigger(&self) -> bool {
+        // option
         self.trigger_price != 0.0
     }
     pub fn set_is_active(
@@ -233,7 +235,7 @@ impl TradeCell {
         src: &[f64],
         src_l: &[f64],
         orders: Vec<Order>,
-        settings: &SETTINGS_STRATEGY,
+        settings: &SETTINGS_TRADE,
         stat_collector: Option<&mut StatCollector>,
     ) {
         self.src = src.to_vec();

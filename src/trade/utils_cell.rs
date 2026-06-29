@@ -1,13 +1,11 @@
 use bc_signals::ready::ready_trait::Signal;
+use bc_utils_lg::settings::SETTINGS_TRADE;
 use uuid::Uuid;
 
-use crate::{
-    settings::SETTINGS_STRATEGY,
-    trade::structs::{Order, Position, TradeCell},
-};
+use crate::trade::structs::{Order, Position, TradeCell};
 
 pub fn qty(
-    s: &SETTINGS_STRATEGY,
+    s: &SETTINGS_TRADE,
     capital: f64,
     signal: &Signal,
     type_: &str,
@@ -25,7 +23,7 @@ pub fn qty(
 }
 
 pub fn qty_and_commission(
-    s: &SETTINGS_STRATEGY,
+    s: &SETTINGS_TRADE,
     capital: f64,
     signal: &Signal,
     type_: &str,
@@ -63,7 +61,7 @@ pub fn price_is_real_time(
 }
 
 pub fn price_with_type(
-    s: &SETTINGS_STRATEGY,
+    s: &SETTINGS_TRADE,
     src: &[f64],
     type_: &str,
 ) -> f64 {
@@ -75,7 +73,7 @@ pub fn price_with_type(
 }
 
 pub fn position_idx(
-    s: &SETTINGS_STRATEGY,
+    s: &SETTINGS_TRADE,
     signal: &Signal,
 ) -> String {
     if signal.signal == s.signal_long {
@@ -121,7 +119,7 @@ pub fn qty_pnl(
 }
 
 pub fn side_signal(
-    s: &SETTINGS_STRATEGY,
+    s: &SETTINGS_TRADE,
     signal: f64,
 ) -> String {
     if signal == s.signal_long {
@@ -134,7 +132,7 @@ pub fn side_signal(
 }
 
 pub fn modify_positions(
-    s: &SETTINGS_STRATEGY,
+    s: &SETTINGS_TRADE,
     cell: &mut TradeCell,
     order: &Order,
 ) {
@@ -192,13 +190,13 @@ pub fn modify_positions(
 }
 
 pub fn modify_positions_or_not(
-    s: &SETTINGS_STRATEGY,
+    s: &SETTINGS_TRADE,
     cell: &mut TradeCell,
     order: &Order,
 ) {
     if {
-        let trigger_price = price_with_type(s, &cell.src, &order.trigger_by);
-        let last = price_with_type(s, &cell.src_l, &order.trigger_by);
+        let trigger_price = price_with_type(&s, &cell.src, &order.trigger_by);
+        let last = price_with_type(&s, &cell.src_l, &order.trigger_by);
         let (crossed, direction) = price_crossed(trigger_price, order.trigger_price, last, last);
         order.is_trigger() && crossed && direction == order.trigger_direction
     } || {
@@ -225,13 +223,24 @@ pub fn modify_positions_or_not(
     }
 }
 
+pub fn trigger_direction(
+    last_price: f64,
+    trigger_price: f64,
+) -> usize {
+    if last_price < trigger_price {
+        1
+    } else {
+        2
+    }
+}
+
 pub fn tp_sl_orders(
     tp_or_sl: &str,
-    s_key: fn(&SETTINGS_STRATEGY) -> &Vec<(f64, f64, f64)>,
-    s: &SETTINGS_STRATEGY,
+    s_key: fn(&SETTINGS_TRADE) -> &Vec<(f64, f64, f64,)>,
+    s: &SETTINGS_TRADE,
     symbol: &str,
     side: &str,
-    src: &[f64],
+    price_is_real_time: f64,
     signal: &Signal,
     position_idx: &str,
     trigger_direction: usize,
@@ -252,7 +261,7 @@ pub fn tp_sl_orders(
                     Default::default(),
                     Default::default(),
                     "last".to_string(),
-                    price_is_real_time(s.work_in_real_time, src)
+                    price_is_real_time
                         * (1.
                             + *percent_of_entry_price
                                 * if position_idx == "1" {
@@ -277,21 +286,20 @@ pub fn tp_sl_orders(
 }
 
 pub fn order_create(
-    s: &SETTINGS_STRATEGY,
+    s: &SETTINGS_TRADE,
     cell: &TradeCell,
     symbol: &str,
-    price: f64,
+    price_limit: f64,
+    price_trigger: f64,
     signal: &Signal,
     src: &[f64],
     type_order: &str,
-    trigger_by: &str,
-    trigger_price: f64,
-    trigger_direction: usize,
     is_reduce: bool,
 ) -> Order {
-    let position_idx = position_idx(s, signal);
-    let side = side_signal(s, signal.signal);
+    let position_idx = position_idx(&s, signal);
+    let side = side_signal(&s, signal.signal);
     let position_not_created = cell.positions.borrow().get(&position_idx).is_none();
+    let price_is_real_time = price_is_real_time(s.work_in_real_time, src);
     Order::new(
         symbol.to_string(),
         side.clone(),
@@ -299,16 +307,16 @@ pub fn order_create(
         qty(s, cell.capital, signal, type_order, 0., 0.),
         0.,
         s.leverage,
-        price,
+        price_limit,
         type_order.to_string(),
         if position_not_created {
             tp_sl_orders(
                 "tp",
-                |v| &v.order_place_settings.takeprofit,
+                |v| &v.takeprofit,
                 s,
                 symbol,
                 &side,
-                src,
+                price_is_real_time,
                 signal,
                 &position_idx,
                 1,
@@ -319,11 +327,11 @@ pub fn order_create(
         if position_not_created {
             tp_sl_orders(
                 "sl",
-                |v| &v.order_place_settings.stoploss,
+                |v| &v.stoploss,
                 s,
                 symbol,
                 &side,
-                src,
+                price_is_real_time,
                 signal,
                 &position_idx,
                 2,
@@ -331,9 +339,9 @@ pub fn order_create(
         } else {
             Default::default()
         },
-        trigger_by.to_string(),
-        trigger_price,
-        trigger_direction,
+        s.trigger_by.clone(),
+        price_trigger,
+        trigger_direction(price_is_real_time, price_trigger),
         is_reduce,
         Uuid::new_v4().to_string(),
         position_idx,

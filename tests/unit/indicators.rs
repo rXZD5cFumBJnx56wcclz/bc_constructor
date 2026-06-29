@@ -7,8 +7,8 @@ use bc_utils_lg::statics::prices::{CLOSE, OPEN, OPEN_LAST, SRC_NOMAP, SRC_TRANSP
 use bc_utils_lg::types::maps::MAP;
 
 use bc_constructor::indicators::*;
-use bc_constructor::map::indicators::*;
-use bc_constructor::settings::{SETTINGS_IND, SETTINGS_INDS, SETTINGS_USED_SRC};
+use bc_pack_indicators::FUNCS_EXTRACT_ARGS;
+use bc_utils_lg::settings::{SETTINGS_IND, SETTINGS_INDS, SETTINGS_USED_SRC};
 
 #[test]
 fn indicators_from_settings_without_bf_res_1() {
