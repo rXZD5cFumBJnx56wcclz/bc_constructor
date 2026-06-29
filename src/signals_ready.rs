@@ -1,9 +1,18 @@
 use bc_indicators::indicators::ready_imports::Indicator;
 use bc_signals::ready::ready_imports::*;
 use bc_signals::ready::ready_trait::SignalReady;
-use bc_utils_lg::types::{maps::MAP, structures::SRC_TRANSPOSE};
+use bc_utils_lg::{
+    settings::SETTINGS,
+    types::{
+        maps::{FUNCS_EXTRACT_ARGS_TYPE, MAP},
+        structures::SRC_TRANSPOSE,
+    },
+};
 
-use crate::indicators::{Indicators, get_in_from_settings};
+use crate::{
+    buffer::Buffer,
+    indicators::{Indicators, get_in_from_settings},
+};
 use bc_utils_lg::settings::{SETTINGS_INDS, SETTINGS_SIGNAL, SETTINGS_SIGNALS};
 
 pub fn get_signals_arg_from_settings<'a>(
@@ -115,6 +124,7 @@ pub fn get_signals_from_settings<'a>(
         .collect()
 }
 
+#[derive(Default)]
 pub struct SignalsReady<'a> {
     signals_ready_without_bf: MAP<&'a str, Box<dyn SignalReady>>,
     signals_ready: MAP<&'a str, (BF_SIGNALS<'a>, Box<dyn SignalReady>)>,
@@ -142,21 +152,38 @@ impl<'a> SignalsReady<'a> {
             signals_ready_without_bf: signals_ready_without_bf,
         }
     }
+    pub fn update_bf<'b>(
+        &mut self,
+        in_: &[Vec<f64>],
+        s: &'a SETTINGS,
+        fa: &'b FUNCS_EXTRACT_ARGS_TYPE<SETTINGS_SIGNAL, Box<dyn SignalReady>>,
+        indicators_without_bf: &MAP<&'a str, Box<dyn Indicator>>,
+    ) {
+        self.signals_ready = get_signals_from_settings(
+            &s.signals_ready,
+            &s.indications,
+            fa,
+            in_,
+            &self.signals_ready_without_bf,
+            indicators_without_bf,
+        );
+    }
 }
 
-pub struct SignalReadyGateway<'a> {
-    pub signals_ready: &'a SignalsReady<'a>,
-    pub indicators: &'a Indicators<'a>,
-    pub settings_signals: &'a SETTINGS_SIGNALS,
-    pub settings_indicators: &'a SETTINGS_INDS,
+#[derive(Default)]
+pub struct SignalsReadyGateway<'a> {
+    pub signals_ready: *const SignalsReady<'a>,
+    pub indicators: *const Indicators<'a>,
+    pub settings_signals: *const SETTINGS_SIGNALS,
+    pub settings_indicators: *const SETTINGS_INDS,
 }
 
-impl<'a> SignalReadyGateway<'a> {
+impl<'a> SignalsReadyGateway<'a> {
     pub fn new(
-        signals_ready: &'a SignalsReady<'a>,
-        indicators: &'a Indicators<'a>,
-        settings_signals: &'a SETTINGS_SIGNALS,
-        settings_indicators: &'a SETTINGS_INDS,
+        signals_ready: *const SignalsReady<'a>,
+        indicators: *const Indicators<'a>,
+        settings_signals: *const SETTINGS_SIGNALS,
+        settings_indicators: *const SETTINGS_INDS,
     ) -> Self {
         Self {
             signals_ready,
@@ -168,9 +195,9 @@ impl<'a> SignalReadyGateway<'a> {
     pub fn signals_series(
         &self,
         indications: &MAP<&'a str, f64>,
-        buffer_in: &[Vec<f64>],
+        buffer_in: &Buffer,
     ) -> MAP<&'a str, Signal> {
-        self.settings_signals
+        unsafe { &*self.settings_signals }
             .iter()
             .fold(MAP::default(), |mut map, setting| {
                 let key_uniq_str = setting.0.as_str();
@@ -204,7 +231,7 @@ impl<'a> SignalReadyGateway<'a> {
                         .map(|i| src_arg[*i])
                         .collect();
                 }
-                let signal = &self.signals_ready.signals_ready[key_uniq_str];
+                let signal = unsafe { &(&(*self.signals_ready).signals_ready)[key_uniq_str] };
                 map.insert(
                     key_uniq_str,
                     signal
@@ -218,11 +245,11 @@ impl<'a> SignalReadyGateway<'a> {
         &self,
         src: &SRC_TRANSPOSE,
     ) -> MAP<&'a str, Vec<Signal>> {
-        self.settings_signals
+        unsafe { &*self.settings_signals }
             .iter()
             .map(|(k, setting)| {
                 let key_uniq = k.as_str();
-                let signal = &self.signals_ready.signals_ready[key_uniq];
+                let signal = unsafe { &(&(*self.signals_ready).signals_ready)[key_uniq] };
                 (
                     key_uniq,
                     signal.1.signals_vec(
@@ -230,18 +257,18 @@ impl<'a> SignalReadyGateway<'a> {
                             &setting.used_ind,
                             &setting.used_src,
                             &setting.order_used_src,
-                            self.settings_indicators,
+                            unsafe { &*self.settings_indicators },
                             src,
-                            &self.indicators.indicators_without_bf,
+                            unsafe { &(*self.indicators).indicators_without_bf },
                         ),
                         &get_signals_arg_from_settings(
                             &setting.used_signals,
                             &setting.order_used_signals,
-                            self.settings_signals,
-                            self.settings_indicators,
+                            unsafe { &*self.settings_signals },
+                            unsafe { &*self.settings_indicators },
                             src,
-                            &self.signals_ready.signals_ready_without_bf,
-                            &self.indicators.indicators_without_bf,
+                            unsafe { &(*self.signals_ready).signals_ready_without_bf },
+                            unsafe { &(*self.indicators).indicators_without_bf },
                         ),
                     ),
                 )

@@ -1,19 +1,30 @@
+use std::borrow::{Borrow, BorrowMut};
 use std::cell::RefCell;
+use std::marker::PhantomPinned;
+use std::pin::Pin;
+use std::ptr;
 
 use bc_indicators::indicators::ready_imports::Indicator;
+use bc_pack_indicators::FUNCS_EXTRACT_ARGS as FA_I;
+use bc_pack_signals_ready::FUNCS_EXTRACT_ARGS as FA_R;
+use bc_pack_signals_train::FUNCS_EXTRACT_ARGS as FA_T;
 use bc_signals::ready::ready_trait::SignalReady;
 use bc_signals::train::train_trait::SignalTrain;
 use bc_utils_lg::settings::{SETTINGS, SETTINGS_IND, SETTINGS_SIGNAL};
 use bc_utils_lg::types::maps::FUNCS_EXTRACT_ARGS_TYPE as FA;
 
+use crate::buffer::{self, Buffer};
 use crate::indicators::{Indicators, IndicatorsGateway};
-use crate::signals_ready::{SignalReadyGateway, SignalsReady};
-use crate::signals_train::{SignalTrainGateway, SignalsTrain};
+use crate::signals_ready::{SignalsReady, SignalsReadyGateway};
+use crate::signals_train::{SignalsTrain, SignalsTrainGateway};
+use crate::trade::statistics::StatCollector;
+use crate::trade::utils_cell::orders_create;
 use crate::trade::{
     structs::{Order, TradeCell},
     utils_cell::order_create,
 };
 
+#[derive(Default)]
 pub struct GWValues<'a> {
     pub indicators: Indicators<'a>,
     pub signals_ready: SignalsReady<'a>,
@@ -48,161 +59,118 @@ impl<'a> GWValues<'a> {
         }
     }
 }
-// struct Buffer: klines, time, orderbook ind, cmc20, fear & gread
-// step(Buffer)
+
+#[derive(Default)]
 pub struct TradeData<'a> {
     pub gw_values: GWValues<'a>,
     pub indicators_gateway: IndicatorsGateway<'a>,
-    pub signals_ready_gateway: SignalReadyGateway<'a>,
-    pub signals_train_gateway: SignalTrainGateway<'a>,
-    pub cell: &'a RefCell<TradeCell>,
+    pub signals_ready_gateway: SignalsReadyGateway<'a>,
+    pub signals_train_gateway: SignalsTrainGateway<'a>,
+    pub cell: TradeCell,
     pub symbol: &'a str,
-    s: &'a SETTINGS,
+    pub stat_collector: Option<StatCollector<'a>>,
+    s: *const SETTINGS,
+    _pin: PhantomPinned,
 }
+
+// backtest
+// let file_reader = FileReader::(s);
+// let exch = file_reader.get_exch();
+// let mut trade_data_collector = TradeDataCollector::default();
+// let src = exch.src(num + trade_data_collector.indicators.w_max());
+// buffer mut = buffer::new(file_reader.src_or(&src[..buffer_size]));
+// trade_data_collector.update_buffer(&buffer);
+// let stat_collector = StatCollector::new(s);
+
+// for series in &src[buffer_size..] {
+// trade_data_collector.update(series);
+// stat_collector.write_any_data_column();
+// }
 
 impl<'a> TradeData<'a> {
     pub fn new(
-        buffer: &[Vec<f64>],
+        src: &[Vec<f64>],
         s: &'a SETTINGS,
         symbol: &'a str,
-    ) -> Self {
-        Self {
-            gw_values,
-            indicators_gateway: IndicatorsGateway::new(
-                &gw_values.indicators,
-                &s.indications,
+        stat_collector: Option<StatCollector<'a>>,
+    ) -> Pin<Box<Self>> {
+        let mut res = Box::pin(Self {
+            gw_values: GWValues::new(s, &FA_I(), &FA_R(), &FA_T(), src),
+            cell: TradeCell::new(
+                s.trade.capital,
+                src[src.len() - 1].to_vec(),
+                src[src.len() - 2].to_vec(),
             ),
-            signals_ready_gateway: SignalReadyGateway::new(
-                &gw_values.signals_ready,
-                &gw_values.indicators,
+            symbol: symbol,
+            s: s,
+            indicators_gateway: IndicatorsGateway::new(std::ptr::null(), &s.indications),
+            signals_ready_gateway: SignalsReadyGateway::new(
+                ptr::null(),
+                ptr::null(),
                 &s.signals_ready,
                 &s.indications,
             ),
-            signals_train_gateway: SignalTrainGateway::new(
-                &gw_values.signals_train,
-                &gw_values.indicators,
+            signals_train_gateway: SignalsTrainGateway::new(
+                ptr::null(),
+                ptr::null(),
                 &s.signals_train,
                 &s.indications,
             ),
-            cell,
-            symbol,
-            s,
-        }
-    }
-    pub fn to_orders(
-        &self,
-        buffer: &[Vec<f64>],
-    ) -> Vec<Order> {
-        let mut res = Vec::new();
-        let indications = self.indicators_gateway.indications_series(buffer);
-        let signals_ready = self
-            .signals_ready_gateway
-            .signals_series(&indications, buffer);
-        // let signals_train = self.signals_train_gateway.signals_series(&indications, buffer);
-        for market_entry in &self.s.strategy.market_entry_orders_signals {
-            res.push(order_create(
-                &self.s.strategy,
-                &self.cell,
-                &self.symbol,
-                0.,
-                0.,
-                &signals_ready[market_entry.as_str()],
-                buffer.last().unwrap(),
-                "market",
-                false,
-            ));
-        }
-        for market_exit in &self.s.strategy.market_exit_orders_signals {
-            res.push(order_create(
-                &self.s.strategy,
-                &self.cell,
-                &self.symbol,
-                0.,
-                0.,
-                &signals_ready[market_exit.as_str()],
-                buffer.last().unwrap(),
-                "market",
-                true,
-            ));
-        }
-        for limit_entry in &self.s.strategy.limit_entry_orders_signals {
-            res.push(order_create(
-                &self.s.strategy,
-                &self.cell,
-                &self.symbol,
-                indications[limit_entry.1.as_str()],
-                0.,
-                &signals_ready[limit_entry.0.as_str()],
-                buffer.last().unwrap(),
-                "limit",
-                false,
-            ));
-        }
-        for limit_exit in &self.s.strategy.limit_exit_orders_signals {
-            res.push(order_create(
-                &self.s.strategy,
-                &self.cell,
-                &self.symbol,
-                indications[limit_exit.1.as_str()],
-                0.,
-                &signals_ready[limit_exit.0.as_str()],
-                buffer.last().unwrap(),
-                "limit",
-                true,
-            ));
-        }
-        for trigger_market_entry in &self.s.strategy.trigger_market_entry_orders_signals {
-            res.push(order_create(
-                &self.s.strategy,
-                &self.cell,
-                &self.symbol,
-                0.,
-                indications[trigger_market_entry.1.as_str()],
-                &signals_ready[trigger_market_entry.0.as_str()],
-                buffer.last().unwrap(),
-                "market",
-                false,
-            ));
-        }
-        for trigger_market_exit in &self.s.strategy.trigger_market_exit_orders_signals {
-            res.push(order_create(
-                &self.s.strategy,
-                &self.cell,
-                &self.symbol,
-                0.,
-                indications[trigger_market_exit.1.as_str()],
-                &signals_ready[trigger_market_exit.0.as_str()],
-                buffer.last().unwrap(),
-                "market",
-                true,
-            ));
-        }
-        for trigger_limit_entry in &self.s.strategy.trigger_limit_entry_orders_signals {
-            res.push(order_create(
-                &self.s.strategy,
-                &self.cell,
-                &self.symbol,
-                indications[trigger_limit_entry.1.as_str()],
-                indications[trigger_limit_entry.2.as_str()],
-                &signals_ready[trigger_limit_entry.0.as_str()],
-                buffer.last().unwrap(),
-                "limit",
-                false,
-            ));
-        }
-        for trigger_limit_exit in &self.s.strategy.trigger_limit_exit_orders_signals {
-            res.push(order_create(
-                &self.s.strategy,
-                &self.cell,
-                &self.symbol,
-                indications[trigger_limit_exit.1.as_str()],
-                indications[trigger_limit_exit.2.as_str()],
-                &signals_ready[trigger_limit_exit.0.as_str()],
-                buffer.last().unwrap(),
-                "limit",
-                false,
-            ));
-        }
+            stat_collector: stat_collector,
+            _pin: PhantomPinned,
+        });
+        let outer_mut = unsafe { Pin::as_mut(&mut res).get_unchecked_mut() };
+        outer_mut.indicators_gateway.indicators = &outer_mut.gw_values.indicators;
+        outer_mut.signals_ready_gateway.indicators = &outer_mut.gw_values.indicators;
+        outer_mut.signals_train_gateway.indicators = &outer_mut.gw_values.indicators;
+        outer_mut.signals_ready_gateway.signals_ready = &outer_mut.gw_values.signals_ready;
+        outer_mut.signals_train_gateway.signals_train = &outer_mut.gw_values.signals_train;
         res
+    }
+    pub fn update(
+        &mut self,
+        buffer: &Buffer,
+        stat_collector: Option<&mut StatCollector<'a>>,
+    ) {
+        let indications = self.indicators_gateway.indications_series(buffer);
+        let orders = orders_create(
+            &unsafe { &*self.s }.trade,
+            self.cell.borrow(),
+            self.symbol,
+            &indications,
+            &self
+                .signals_ready_gateway
+                .signals_series(&indications, buffer),
+            buffer,
+        );
+        self.cell.borrow_mut().step(
+            buffer.last().unwrap(),
+            &buffer[buffer.len() - 2],
+            orders,
+            &unsafe { &*self.s }.trade,
+            stat_collector,
+        );
+    }
+    pub fn update_bf(
+        &mut self,
+        buffer: &Buffer,
+    ) {
+        self.gw_values.indicators.update_bf(
+            buffer.as_slice(),
+            unsafe { &(&*self.s).indications },
+            &FA_I(),
+        );
+        self.gw_values.signals_ready.update_bf(
+            buffer.as_slice(),
+            unsafe { &*self.s },
+            &FA_R(),
+            &self.gw_values.indicators.indicators_without_bf,
+        );
+        self.gw_values.signals_train.update_bf(
+            buffer.as_slice(),
+            unsafe { &*self.s },
+            &FA_T(),
+            &self.gw_values.indicators.indicators_without_bf,
+        );
     }
 }

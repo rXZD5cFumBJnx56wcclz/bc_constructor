@@ -1,8 +1,11 @@
 use bc_signals::ready::ready_trait::Signal;
-use bc_utils_lg::settings::SETTINGS_TRADE;
+use bc_utils_lg::{settings::SETTINGS_TRADE, types::maps::MAP};
 use uuid::Uuid;
 
-use crate::trade::structs::{Order, Position, TradeCell};
+use crate::{
+    buffer::Buffer,
+    trade::structs::{Order, Position, TradeCell},
+};
 
 pub fn qty(
     s: &SETTINGS_TRADE,
@@ -236,7 +239,7 @@ pub fn trigger_direction(
 
 pub fn tp_sl_orders(
     tp_or_sl: &str,
-    s_key: fn(&SETTINGS_TRADE) -> &Vec<(f64, f64, f64,)>,
+    s_key: fn(&SETTINGS_TRADE) -> &Vec<(f64, f64, f64)>,
     s: &SETTINGS_TRADE,
     symbol: &str,
     side: &str,
@@ -347,4 +350,171 @@ pub fn order_create(
         position_idx,
         true,
     )
+}
+
+pub fn orders_market_extern<'a>(
+    vec: &mut Vec<Order>,
+    s: &SETTINGS_TRADE,
+    cell: &TradeCell,
+    symbol: &str,
+    signals_ready_series: &MAP<&'a str, Signal>,
+    buffer: &Buffer,
+) {
+    for market_entry in &s.market_entry_orders_signals {
+        vec.push(order_create(
+            &s,
+            &cell,
+            &symbol,
+            0.,
+            0.,
+            &signals_ready_series[market_entry.as_str()],
+            buffer.last().unwrap(),
+            "market",
+            false,
+        ));
+    }
+    for market_exit in &s.market_exit_orders_signals {
+        vec.push(order_create(
+            &s,
+            &cell,
+            &symbol,
+            0.,
+            0.,
+            &signals_ready_series[market_exit.as_str()],
+            buffer.last().unwrap(),
+            "market",
+            true,
+        ));
+    }
+}
+
+pub fn orders_limit_extern<'a>(
+    vec: &mut Vec<Order>,
+    s: &SETTINGS_TRADE,
+    cell: &TradeCell,
+    symbol: &str,
+    indications_series: &MAP<&'a str, f64>,
+    signals_ready_series: &MAP<&'a str, Signal>,
+    buffer: &Buffer,
+) {
+    for limit_entry in &s.limit_entry_orders_signals {
+        vec.push(order_create(
+            &s,
+            &cell,
+            &symbol,
+            indications_series[limit_entry.1.as_str()],
+            0.,
+            &signals_ready_series[limit_entry.0.as_str()],
+            buffer.last().unwrap(),
+            "limit",
+            false,
+        ));
+    }
+    for limit_exit in &s.limit_exit_orders_signals {
+        vec.push(order_create(
+            &s,
+            &cell,
+            &symbol,
+            indications_series[limit_exit.1.as_str()],
+            0.,
+            &signals_ready_series[limit_exit.0.as_str()],
+            buffer.last().unwrap(),
+            "limit",
+            true,
+        ));
+    }
+}
+
+pub fn orders_trigger_extern<'a>(
+    vec: &mut Vec<Order>,
+    s: &SETTINGS_TRADE,
+    cell: &TradeCell,
+    symbol: &str,
+    indications_series: &MAP<&'a str, f64>,
+    signals_ready_series: &MAP<&'a str, Signal>,
+    buffer: &Buffer,
+) {
+    for trigger_market_entry in &s.trigger_market_entry_orders_signals {
+        vec.push(order_create(
+            &s,
+            &cell,
+            &symbol,
+            0.,
+            indications_series[trigger_market_entry.1.as_str()],
+            &signals_ready_series[trigger_market_entry.0.as_str()],
+            buffer.last().unwrap(),
+            "market",
+            false,
+        ));
+    }
+    for trigger_market_exit in &s.trigger_market_exit_orders_signals {
+        vec.push(order_create(
+            &s,
+            &cell,
+            &symbol,
+            0.,
+            indications_series[trigger_market_exit.1.as_str()],
+            &signals_ready_series[trigger_market_exit.0.as_str()],
+            buffer.last().unwrap(),
+            "market",
+            true,
+        ));
+    }
+    for trigger_limit_entry in &s.trigger_limit_entry_orders_signals {
+        vec.push(order_create(
+            &s,
+            &cell,
+            &symbol,
+            indications_series[trigger_limit_entry.1.as_str()],
+            indications_series[trigger_limit_entry.2.as_str()],
+            &signals_ready_series[trigger_limit_entry.0.as_str()],
+            buffer.last().unwrap(),
+            "limit",
+            false,
+        ));
+    }
+    for trigger_limit_exit in &s.trigger_limit_exit_orders_signals {
+        vec.push(order_create(
+            &s,
+            &cell,
+            &symbol,
+            indications_series[trigger_limit_exit.1.as_str()],
+            indications_series[trigger_limit_exit.2.as_str()],
+            &signals_ready_series[trigger_limit_exit.0.as_str()],
+            buffer.last().unwrap(),
+            "limit",
+            false,
+        ));
+    }
+}
+
+pub fn orders_create<'a>(
+    s: &SETTINGS_TRADE,
+    cell: &TradeCell,
+    symbol: &str,
+    indications_series: &MAP<&'a str, f64>,
+    signals_ready_series: &MAP<&'a str, Signal>,
+    buffer: &Buffer,
+) -> Vec<Order> {
+    let mut res = Vec::new();
+    orders_market_extern(&mut res, s, cell, symbol, signals_ready_series, buffer);
+    orders_limit_extern(
+        &mut res,
+        s,
+        cell,
+        symbol,
+        indications_series,
+        signals_ready_series,
+        buffer,
+    );
+    orders_trigger_extern(
+        &mut res,
+        s,
+        cell,
+        symbol,
+        indications_series,
+        signals_ready_series,
+        buffer,
+    );
+    res
 }

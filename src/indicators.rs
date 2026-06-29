@@ -1,8 +1,13 @@
 use bc_indicators::indicators::ready_imports::{BF_INDICATOR, Indicator};
-use bc_utils_lg::types::{maps::MAP, structures::SRC_TRANSPOSE};
+use bc_utils_lg::types::{
+    maps::{FUNCS_EXTRACT_ARGS_TYPE, MAP},
+    structures::SRC_TRANSPOSE,
+};
 use rustc_hash::FxHashMap;
 
 use bc_utils_lg::settings::{SETTINGS_IND, SETTINGS_INDS, SETTINGS_USED_SRC};
+
+use crate::buffer::Buffer;
 
 pub fn get_in_from_settings<'a>(
     used_ind: &Vec<String>,
@@ -118,25 +123,34 @@ impl<'a> Indicators<'a> {
             indicators_without_bf: ind_without_bf,
         }
     }
+    pub fn update_bf(
+        &mut self,
+        in_: &[Vec<f64>],
+        s: &'a SETTINGS_INDS,
+        fa: &FUNCS_EXTRACT_ARGS_TYPE<SETTINGS_IND, Box<dyn Indicator>>,
+    ) {
+        self.indicators = get_indicators_from_settings(s, fa, in_, &self.indicators_without_bf);
+    }
 }
 
+#[derive(Default)]
 pub struct IndicatorsGateway<'a> {
-    pub indicators: &'a Indicators<'a>,
-    pub settings: &'a SETTINGS_INDS,
+    pub indicators: *const Indicators<'a>,
+    pub settings: *const SETTINGS_INDS,
 }
 
 impl<'a> IndicatorsGateway<'a> {
     pub fn new(
-        indicators: &'a Indicators<'a>,
+        indicators: *const Indicators<'a>,
         settings: &'a SETTINGS_INDS,
     ) -> Self {
         Self { indicators, settings }
     }
     pub fn indications_series(
         &self,
-        buffer_in: &[Vec<f64>],
+        buffer_in: &Buffer,
     ) -> MAP<&'a str, f64> {
-        self.settings
+        unsafe { &*self.settings }
             .iter()
             .fold(MAP::default(), |mut map, setting| {
                 let key_uniq_str = setting.0.as_str();
@@ -153,7 +167,7 @@ impl<'a> IndicatorsGateway<'a> {
                 if setting.1.order_used.len() != 0 {
                     src_arg = setting.1.order_used.iter().map(|i| src_arg[*i]).collect();
                 }
-                let indicator = &self.indicators.indicators[key_uniq_str];
+                let indicator = unsafe { &(&(*self.indicators).indicators)[key_uniq_str] };
                 map.insert(
                     key_uniq_str,
                     indicator.1.ind_with_bf(src_arg.as_slice(), &indicator.0, 0),
@@ -165,20 +179,20 @@ impl<'a> IndicatorsGateway<'a> {
         &self,
         src: &SRC_TRANSPOSE,
     ) -> MAP<&'a str, Vec<f64>> {
-        self.settings
+        unsafe { &*self.settings }
             .iter()
             .map(|(k, setting)| {
                 let key_uniq = k.as_str();
-                let indicator = &self.indicators.indicators[key_uniq];
+                let indicator = unsafe { &(&(*self.indicators).indicators)[key_uniq] };
                 (
                     key_uniq,
                     indicator.1.ind_vec(&get_in_from_settings(
                         &setting.used_ind,
                         &setting.used_src,
                         &setting.order_used,
-                        &self.settings,
+                        unsafe { &*self.settings },
                         src,
-                        &self.indicators.indicators_without_bf,
+                        unsafe { &(*self.indicators).indicators_without_bf },
                     )),
                 )
             })

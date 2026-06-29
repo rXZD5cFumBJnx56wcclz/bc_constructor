@@ -10,7 +10,7 @@ use bc_utils_lg::types::maps::MAP;
 use criterion::{Criterion, criterion_group, criterion_main};
 
 use bc_constructor::indicators::{Indicators, IndicatorsGateway};
-use bc_constructor::signals_ready::{SignalReadyGateway, SignalsReady};
+use bc_constructor::signals_ready::{SignalsReady, SignalsReadyGateway};
 
 fn get_signals_ready_from_settings_1(c: &mut Criterion) {
     let s = SETTINGS_SIGNALS::from_iter([(
@@ -27,7 +27,7 @@ fn get_signals_ready_from_settings_1(c: &mut Criterion) {
     let bind4 = Default::default();
     let bind5 = Default::default();
     let sr = SignalsReady::new(&s, &bind, &FUNCS_EXTRACT_ARGS_SR(), &SRC_TRANSPOSE, &bind2);
-    let sr_gw = SignalReadyGateway::new(&sr, &bind3, &s, &bind4);
+    let sr_gw = SignalsReadyGateway::new(&sr, &bind3, &s, &bind4);
     c.bench_function("get_signals_ready_from_settings_1", |b| {
         b.iter(|| sr_gw.signals_series(black_box(&bind5), black_box(&SRC_TRANSPOSE)))
     });
@@ -93,7 +93,7 @@ fn get_signals_ready_from_settings_2(c: &mut Criterion) {
         &SRC_TRANSPOSE,
         &indicators.indicators_without_bf,
     );
-    let signals_gw = SignalReadyGateway::new(
+    let signals_gw = SignalsReadyGateway::new(
         &signals,
         &indicators,
         &settings_signals,

@@ -6,7 +6,7 @@ use bc_utils_lg::statics::prices::SRC_TRANSPOSE;
 use bc_utils_lg::types::maps::MAP;
 use criterion::{Criterion, criterion_group, criterion_main};
 
-use bc_constructor::signals_train::{SignalTrainGateway, SignalsTrain};
+use bc_constructor::signals_train::{SignalsTrain, SignalsTrainGateway};
 
 fn get_signals_train_from_settings_1(c: &mut Criterion) {
     let settings_signals = SETTINGS_SIGNALS::from_iter([(
@@ -30,7 +30,7 @@ fn get_signals_train_from_settings_1(c: &mut Criterion) {
         &SRC_TRANSPOSE,
         &bind2,
     );
-    let sr_gw = SignalTrainGateway::new(&sr, &bind3, &settings_signals, &bind4);
+    let sr_gw = SignalsTrainGateway::new(&sr, &bind3, &settings_signals, &bind4);
     c.bench_function("get_signals_train_from_settings_1", |b| {
         b.iter(|| sr_gw.signals_series(black_box(&bind5), black_box(&SRC_TRANSPOSE)))
     });

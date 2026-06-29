@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use clap::{Args, Parser, Subcommand};
 
-#[derive(Parser, Clone,)]
+#[derive(Parser, Clone)]
 #[command(version)]
 pub struct Cli {
     #[command(flatten)]
@@ -13,7 +13,7 @@ pub struct Cli {
     pub commands: Option<Commands>,
 }
 
-#[derive(Subcommand, Clone,)]
+#[derive(Subcommand, Clone)]
 pub enum Commands {
     Run,
     #[command(alias("upd"))]
@@ -23,7 +23,7 @@ pub enum Commands {
     Bench,
 }
 
-#[derive(Args, Clone,)]
+#[derive(Args, Clone)]
 pub struct Trade {
     #[arg(long)]
     pub category: Option<String>,
@@ -83,7 +83,7 @@ pub struct Trade {
     pub work_in_real_time: Option<bool>,
 }
 
-#[derive(Args,Clone,)]
+#[derive(Args, Clone)]
 pub struct Paths {
     #[arg(long, short, default_value = "./settings.json")]
     pub settings: PathBuf,

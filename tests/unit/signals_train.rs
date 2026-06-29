@@ -73,7 +73,7 @@ fn signals_train_res_1() {
     );
     let indicators_gw = IndicatorsGateway::new(&indicators, &settings_indicators);
     let indications = indicators_gw.indications_series(&SRC_TRANSPOSE);
-    let signals_gw = SignalTrainGateway::new(
+    let signals_gw = SignalsTrainGateway::new(
         &signals,
         &indicators,
         &settings_signals,
@@ -138,7 +138,7 @@ fn signals_train_vec_res_1() {
         &SRC_TRANSPOSE,
         &indicators.indicators_without_bf,
     );
-    let signals_gw = SignalTrainGateway::new(
+    let signals_gw = SignalsTrainGateway::new(
         &signals,
         &indicators,
         &settings_signals,

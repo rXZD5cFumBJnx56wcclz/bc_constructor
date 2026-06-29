@@ -97,7 +97,14 @@ impl FileModificator for VisualCollector<'_> {
         path: &str,
     ) -> std::io::Result<()> {
         create_dir_all(path)?;
-        if self.s.files_path.script_backtest.to_str().unwrap().is_empty() {
+        if self
+            .s
+            .files_path
+            .script_backtest
+            .to_str()
+            .unwrap()
+            .is_empty()
+        {
             let mut file = File::create_new(format!("{path}/{}", "script_data.plt"))?;
             writeln!(
                 file,
