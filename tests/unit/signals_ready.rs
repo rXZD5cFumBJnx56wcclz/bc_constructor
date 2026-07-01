@@ -6,7 +6,7 @@ use bc_pack_indicators::FUNCS_EXTRACT_ARGS as FUNCS_EXTRACT_ARGS_IND;
 use bc_pack_signals_ready::FUNCS_EXTRACT_ARGS as FUNCS_EXTRACT_ARGS_SR;
 use bc_signals::ready::ready_imports::*;
 use bc_signals::ready::{
-    change_signal::CHANGE_SIGNAL, convert::CONVERT, invert::INVERT, pumpdump::PUMPDUMP,
+    change_signal::CHANGE_SIGNAL, convert::CONVERT, invert::INVERT, th::TH,
 };
 use bc_utils_lg::settings::{
     SETTINGS_IND, SETTINGS_INDS, SETTINGS_SIGNAL, SETTINGS_SIGNALS, SETTINGS_USED_SRC,
@@ -20,14 +20,14 @@ use bc_constructor::signals_ready::*;
 #[test]
 fn signals_from_settings_without_bf_res_1() {
     let settings = SETTINGS_SIGNALS::from_iter([(
-        "pumpdump_1".to_string(),
-        SETTINGS_SIGNAL { key: "pumpdump".to_string(), ..Default::default() },
+        "th_1".to_string(),
+        SETTINGS_SIGNAL { key: "th".to_string(), ..Default::default() },
     )]);
     let funcs_extract_args = FUNCS_EXTRACT_ARGS_SR();
     let res = get_signals_from_settings_without_bf(&settings, &funcs_extract_args);
-    let res_1 = res.get("pumpdump_1").unwrap().as_ref();
-    let rsi_test_1 = PUMPDUMP::default();
-    let rsi_test_2 = (res_1 as &dyn Any).downcast_ref::<PUMPDUMP>().unwrap();
+    let res_1 = res.get("th_1").unwrap().as_ref();
+    let rsi_test_1 = TH::default();
+    let rsi_test_2 = (res_1 as &dyn Any).downcast_ref::<TH>().unwrap();
     assert_eq!(&rsi_test_1, rsi_test_2);
 }
 

@@ -21,7 +21,7 @@ fn indicators_from_settings_without_bf_res_1() {
             kwargs_string: MAP::default(),
             used_src: vec![],
             used_ind: vec![],
-            order_used: vec![],
+            procedure_used: vec![],
         },
     )]);
     let funcs_extract_args = FUNCS_EXTRACT_ARGS();
@@ -44,7 +44,7 @@ fn indication_res_1() {
                 kwargs_string: MAP::default(),
                 used_src: vec![SETTINGS_USED_SRC { index: 0, sub_from_last_i: 0 }],
                 used_ind: vec![],
-                order_used: vec![],
+                procedure_used: vec![],
             },
         ),
         (
@@ -56,7 +56,7 @@ fn indication_res_1() {
                 kwargs_string: MAP::default(),
                 used_src: vec![],
                 used_ind: vec!["rsi_1".to_string()],
-                order_used: vec![],
+                procedure_used: vec![],
             },
         ),
         (
@@ -71,7 +71,7 @@ fn indication_res_1() {
                     SETTINGS_USED_SRC { index: 3, sub_from_last_i: 2 },
                 ],
                 used_ind: vec!["rma_1".to_string()],
-                order_used: vec![],
+                procedure_used: vec![],
             },
         ),
         (
@@ -95,7 +95,7 @@ fn indication_res_1() {
             SETTINGS_IND {
                 key: "minus".to_string(),
                 used_ind: vec!["repeat_1".to_string(), "repeat_2".to_string()],
-                order_used: vec![1, 0],
+                procedure_used: vec![1, 0],
                 ..Default::default()
             },
         ),
@@ -127,7 +127,7 @@ fn indications_vec_res_1() {
             kwargs_string: MAP::default(),
             used_src: vec![SETTINGS_USED_SRC { index: 0, sub_from_last_i: 0 }],
             used_ind: vec![],
-            order_used: vec![],
+            procedure_used: vec![],
         },
     )]);
     let indicators = Indicators::new(&settings, &FUNCS_EXTRACT_ARGS(), &SRC_TRANSPOSE);

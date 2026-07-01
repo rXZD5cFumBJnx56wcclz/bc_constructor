@@ -7,12 +7,18 @@ use rustc_hash::FxHashMap;
 
 use bc_utils_lg::settings::{SETTINGS_IND, SETTINGS_INDS, SETTINGS_USED_SRC};
 
-use crate::buffer::Buffer;
+
+pub fn get_w_max(s: &SETTINGS_INDS, funcs_extract_args: &FxHashMap<&str, fn(&SETTINGS_IND) -> Box<dyn Indicator>>) -> usize {
+    get_indicators_from_settings_without_bf(s, funcs_extract_args).values()
+        .map(|v| v.w())
+        .max()
+        .unwrap()
+}
 
 pub fn get_in_from_settings<'a>(
     used_ind: &Vec<String>,
     used_src: &Vec<SETTINGS_USED_SRC>,
-    order_used: &Vec<usize>,
+    procedure_used: &Vec<usize>,
     settings: &SETTINGS_INDS,
     src: &SRC_TRANSPOSE,
     map_indicators: &MAP<&'a str, Box<dyn Indicator>>,
@@ -30,15 +36,15 @@ pub fn get_in_from_settings<'a>(
             &get_in_from_settings(
                 &settings[used_ind_el].used_ind,
                 &settings[used_ind_el].used_src,
-                &settings[used_ind_el].order_used,
+                &settings[used_ind_el].procedure_used,
                 settings,
                 src,
                 map_indicators,
             ),
         ));
     }
-    if !order_used.is_empty() {
-        res = order_used.iter().map(|i| res[*i].clone()).collect();
+    if !procedure_used.is_empty() {
+        res = procedure_used.iter().map(|i| res[*i].clone()).collect();
     }
     if !res.is_empty() {
         let min_len = res
@@ -86,7 +92,7 @@ pub fn get_indicators_from_settings<'a>(
                     indicator.bf(&get_in_from_settings(
                         &settings_indicator.used_ind,
                         &settings_indicator.used_src,
-                        &settings_indicator.order_used,
+                        &settings_indicator.procedure_used,
                         settings,
                         &in_.into_iter()
                             .map(|v| v[..v.len() - 1].to_vec())
@@ -148,7 +154,7 @@ impl<'a> IndicatorsGateway<'a> {
     }
     pub fn indications_series(
         &self,
-        buffer_in: &Buffer,
+        buffer_in: &[Vec<f64>],
     ) -> MAP<&'a str, f64> {
         unsafe { &*self.settings }
             .iter()
@@ -164,8 +170,8 @@ impl<'a> IndicatorsGateway<'a> {
                 for ui_el in &setting.1.used_ind {
                     src_arg.push(map[ui_el.as_str()]);
                 }
-                if setting.1.order_used.len() != 0 {
-                    src_arg = setting.1.order_used.iter().map(|i| src_arg[*i]).collect();
+                if setting.1.procedure_used.len() != 0 {
+                    src_arg = setting.1.procedure_used.iter().map(|i| src_arg[*i]).collect();
                 }
                 let indicator = unsafe { &(&(*self.indicators).indicators)[key_uniq_str] };
                 map.insert(
@@ -189,7 +195,7 @@ impl<'a> IndicatorsGateway<'a> {
                     indicator.1.ind_vec(&get_in_from_settings(
                         &setting.used_ind,
                         &setting.used_src,
-                        &setting.order_used,
+                        &setting.procedure_used,
                         unsafe { &*self.settings },
                         src,
                         unsafe { &(*self.indicators).indicators_without_bf },

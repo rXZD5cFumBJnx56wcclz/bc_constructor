@@ -1,7 +1,7 @@
 use core::f64;
 use std::cell::Ref;
 
-use bc_utils_lg::settings::{SETTINGS, SETTINGS_TRADE};
+use bc_utils_lg::settings::SETTINGS_TRADE;
 use bc_utils_lg::types::maps::MAP;
 use num_traits::Float;
 
@@ -10,6 +10,7 @@ use crate::trade::{
     utils_cell::{price_is_real_time, qty_pnl},
 };
 
+#[derive(Debug)]
 pub struct StatCollector<'a> {
     pub symbol: String,
     pub cells: Vec<TradeCell>,
@@ -126,7 +127,7 @@ impl StatCollector<'_> {
     pub fn to_exit(&self) -> Vec<f64> {
         self.into_iter()
             .map(|c| {
-                if c.positions.borrow().values().next().unwrap().is_active == false {
+                if !c.positions.borrow().is_empty() && c.positions.borrow().values().next().unwrap().is_active == false {
                     c.src[0]
                 } else {
                     f64::NAN
@@ -158,7 +159,7 @@ impl StatCollector<'_> {
     }
     pub fn to_data(&self) -> Vec<MAP<String, Vec<f64>>> {
         let main_columns = [
-            "time", "open", "high", "low", "close", "volume", "turnover", "index", "mark",
+            "time", "open", "high", "low", "close", "volume", "turnover",
             "capital", "entry", "exit", "pnl", "qty",
         ];
         let mut res: Vec<MAP<String, Vec<f64>>> = Default::default();
@@ -171,7 +172,7 @@ impl StatCollector<'_> {
                 .zip(StatCollector::to_all(&[self.to_exit(), self.to_pnl()]))
                 .zip(StatCollector::to_all(&[
                     self.into_iter()
-                        .map(|c| c.positions.borrow().values().next().unwrap().qty)
+                        .map(|c| if !c.positions.borrow().is_empty() {c.positions.borrow().values().next().unwrap().qty} else {f64::NAN})
                         .collect(),
                     self.to_entry_and_exit(),
                 ]))
@@ -184,9 +185,10 @@ impl StatCollector<'_> {
                     v
                 })
                 .fold(MAP::default(), |mut map, row| {
-                    for (i, key) in main_columns.iter().enumerate() {
+                    for (i, key) in main_columns.iter().enumerate() {    
                         map.entry(key.to_string())
-                            .and_modify(|vec: &mut Vec<f64>| vec.push(row[i]));
+                            .and_modify(|vec: &mut Vec<f64>| vec.push(row[i]))
+                            .or_insert(vec![row[i]]);
                     }
                     map
                 }),

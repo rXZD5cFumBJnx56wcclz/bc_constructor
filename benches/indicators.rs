@@ -16,7 +16,7 @@ fn indications_series_1(c: &mut Criterion) {
             kwargs_string: MAP::default(),
             used_src: vec![SETTINGS_USED_SRC { index: 0, sub_from_last_i: 0 }],
             used_ind: vec![],
-            order_used: vec![],
+            procedure_used: vec![],
         },
     )]);
     let indicators = Indicators::new(&s, &FUNCS_EXTRACT_ARGS(), &SRC_TRANSPOSE);
@@ -42,7 +42,7 @@ fn indications_series_2(c: &mut Criterion) {
                     SETTINGS_USED_SRC { index: 3, sub_from_last_i: 1 },
                 ],
                 used_ind: vec![],
-                order_used: vec![],
+                procedure_used: vec![],
             },
         ),
         (
@@ -54,7 +54,7 @@ fn indications_series_2(c: &mut Criterion) {
                 kwargs_string: MAP::default(),
                 used_src: vec![],
                 used_ind: vec!["avg_1".to_string()],
-                order_used: vec![],
+                procedure_used: vec![],
             },
         ),
         (
@@ -66,7 +66,7 @@ fn indications_series_2(c: &mut Criterion) {
                 kwargs_string: MAP::default(),
                 used_src: vec![],
                 used_ind: vec!["ema_1".to_string()],
-                order_used: vec![],
+                procedure_used: vec![],
             },
         ),
     ]);

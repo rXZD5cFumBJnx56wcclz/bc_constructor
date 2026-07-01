@@ -1,7 +1,6 @@
 use std::error::Error;
 use std::fs::{self, File, copy, create_dir_all};
 use std::io::{BufWriter, Write};
-use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use bc_utils_lg::settings::SETTINGS_FILES_PATH;
@@ -14,13 +13,11 @@ use crate::visual::BT_SCRIPT;
 fn get_backtest_dir(
     dir: &str,
     symbol: &str,
+    time: u64
 ) -> String {
     format!(
-        "{dir}/{}/{symbol}",
-        SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs(),
+        "{dir}/{time}/{symbol}",
+        
     )
 }
 
@@ -92,18 +89,23 @@ impl FileWR<'_> {
     pub fn src(&self) -> Result<Vec<Vec<f64>>, Box<dyn Error>> {
         Ok(decode_from_slice(&fs::read(&self.s.src_data)?, standard())?.0)
     }
-    pub fn src_or(&self, src: Vec<Vec<f64>>) -> Vec<Vec<f64>> {
+    pub fn src_or(
+        &self,
+        src: Vec<Vec<f64>>,
+    ) -> Vec<Vec<f64>> {
         self.src().unwrap_or(src)
     }
     pub fn backtest_write(
         &self,
-        data: &MAP<String, Vec<f64>>,
+        data: &Vec<MAP<String, Vec<f64>>>,
         symbol: &str,
+        time: u64,
     ) -> Result<(), Box<dyn Error>> {
-        let dir = get_backtest_dir(self.s.backtest.to_str().unwrap(), symbol);
+        let dir = get_backtest_dir(self.s.backtest.to_str().unwrap(), symbol, time);
+        create_dir_all(&dir)?;
         if !self.s.backtest.as_os_str().is_empty() {
             self.script_backtest_write(&dir, symbol)?;
-            write_any_data_column(&dir, &format!("{dir}/data.dat"), data)?;
+            write_any_data_column(&dir, &format!("{dir}/data.dat"), &data[0])?;
         }
         Ok(())
     }
@@ -113,7 +115,7 @@ impl FileWR<'_> {
         dir: &str,
         symbol: &str,
     ) -> Result<(), Box<dyn Error>> {
-        if !self.s.script_backtest.as_os_str().is_empty() {
+        if self.s.script_backtest.as_os_str().is_empty() {
             let mut file = File::create_new(format!("{}/{}", dir, "script_data.plt"))?;
             writeln!(file, "{}", BT_SCRIPT(symbol,))?;
         } else {
@@ -124,10 +126,13 @@ impl FileWR<'_> {
         }
         Ok(())
     }
-    pub fn script_backtest(&self,) -> Result<String, Box<dyn Error>>{
+    pub fn script_backtest(&self) -> Result<String, Box<dyn Error>> {
         Ok(fs::read_to_string(&self.s.script_backtest)?)
     }
-    pub fn script_backtest_or(&self, script_backtest: String) -> String {
+    pub fn script_backtest_or(
+        &self,
+        script_backtest: String,
+    ) -> String {
         self.script_backtest().unwrap_or(script_backtest)
     }
     // train_model_write

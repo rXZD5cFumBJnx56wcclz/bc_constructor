@@ -2,9 +2,13 @@ use std::path::PathBuf;
 
 use clap::{Args, Parser, Subcommand};
 
-#[derive(Parser, Clone)]
+#[derive(Parser, Clone, Debug)]
 #[command(version)]
 pub struct Cli {
+    #[command(flatten)]
+    pub addition_args: Option<AdditionArgs>,
+    #[command(flatten)]
+    pub addition_flugs: Option<AdditionFlags>,
     #[command(flatten)]
     pub trade: Option<Trade>,
     #[command(flatten)]
@@ -13,20 +17,26 @@ pub struct Cli {
     pub commands: Option<Commands>,
 }
 
-#[derive(Subcommand, Clone)]
+#[derive(Subcommand, Clone, Debug)]
 pub enum Commands {
     Run,
     #[command(alias("upd"))]
     Update,
     #[command(alias("bt"))]
-    Backtest {
-        #[arg(long)]
-        save_and_use: bool,
-    },
+    Backtest,
     Bench,
 }
 
-#[derive(Args, Clone)]
+#[derive(Args, Clone, Debug)]
+pub struct AdditionFlags {
+    #[arg(long)]
+    pub save_data: bool,
+}
+
+#[derive(Args, Clone, Debug)]
+pub struct AdditionArgs {}
+
+#[derive(Args, Clone, Debug)]
 pub struct Trade {
     #[arg(long)]
     pub category: Option<String>,
@@ -42,6 +52,8 @@ pub struct Trade {
     pub mode_trade: Option<String>,
     #[arg(long)]
     pub hedge_mode: Option<bool>,
+    #[arg(long)]
+    pub symbols_time_update_ms: Option<usize>,
     #[arg(long, num_args=1..)]
     pub symbols: Option<Vec<String>>,
     #[arg(long, num_args=1..)]
@@ -88,7 +100,7 @@ pub struct Trade {
     pub work_in_real_time: Option<bool>,
 }
 
-#[derive(Args, Clone)]
+#[derive(Args, Clone, Debug)]
 pub struct Paths {
     #[arg(long, short, default_value = "./settings.json")]
     pub settings: PathBuf,

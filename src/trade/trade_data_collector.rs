@@ -13,16 +13,12 @@ use bc_signals::train::train_trait::SignalTrain;
 use bc_utils_lg::settings::{SETTINGS, SETTINGS_IND, SETTINGS_SIGNAL};
 use bc_utils_lg::types::maps::FUNCS_EXTRACT_ARGS_TYPE as FA;
 
-use crate::buffer::{self, Buffer};
 use crate::indicators::{Indicators, IndicatorsGateway};
 use crate::signals_ready::{SignalsReady, SignalsReadyGateway};
 use crate::signals_train::{SignalsTrain, SignalsTrainGateway};
 use crate::trade::statistics::StatCollector;
 use crate::trade::utils_cell::orders_create;
-use crate::trade::{
-    structs::{Order, TradeCell},
-    utils_cell::order_create,
-};
+use crate::trade::structs::TradeCell;
 
 #[derive(Default)]
 pub struct GWValues<'a> {
@@ -60,16 +56,14 @@ impl<'a> GWValues<'a> {
     }
 }
 
-#[derive(Default)]
 pub struct TradeData<'a> {
     pub gw_values: GWValues<'a>,
     pub indicators_gateway: IndicatorsGateway<'a>,
     pub signals_ready_gateway: SignalsReadyGateway<'a>,
     pub signals_train_gateway: SignalsTrainGateway<'a>,
-    pub cell: TradeCell,
+    pub cell: RefCell<TradeCell>,
     pub symbol: &'a str,
-    pub stat_collector: Option<StatCollector<'a>>,
-    s: *const SETTINGS,
+    s: &'a SETTINGS,
     _pin: PhantomPinned,
 }
 
@@ -92,15 +86,14 @@ impl<'a> TradeData<'a> {
         src: &[Vec<f64>],
         s: &'a SETTINGS,
         symbol: &'a str,
-        stat_collector: Option<StatCollector<'a>>,
     ) -> Pin<Box<Self>> {
         let mut res = Box::pin(Self {
             gw_values: GWValues::new(s, &FA_I(), &FA_R(), &FA_T(), src),
-            cell: TradeCell::new(
+            cell: RefCell::new(TradeCell::new(
                 s.trade.capital,
                 src[src.len() - 1].to_vec(),
                 src[src.len() - 2].to_vec(),
-            ),
+            )),
             symbol: symbol,
             s: s,
             indicators_gateway: IndicatorsGateway::new(std::ptr::null(), &s.indications),
@@ -116,7 +109,6 @@ impl<'a> TradeData<'a> {
                 &s.signals_train,
                 &s.indications,
             ),
-            stat_collector: stat_collector,
             _pin: PhantomPinned,
         });
         let outer_mut = unsafe { Pin::as_mut(&mut res).get_unchecked_mut() };
@@ -128,14 +120,14 @@ impl<'a> TradeData<'a> {
         res
     }
     pub fn update(
-        &mut self,
-        buffer: &Buffer,
+        self: Pin<&Self>,
+        buffer: &[Vec<f64>],
         stat_collector: Option<&mut StatCollector<'a>>,
     ) {
         let indications = self.indicators_gateway.indications_series(buffer);
         let orders = orders_create(
-            &unsafe { &*self.s }.trade,
-            self.cell.borrow(),
+            &self.s.trade,
+            self.cell.borrow().borrow(),
             self.symbol,
             &indications,
             &self
@@ -143,32 +135,30 @@ impl<'a> TradeData<'a> {
                 .signals_series(&indications, buffer),
             buffer,
         );
-        self.cell.borrow_mut().step(
+        self.as_ref().get_ref().cell.borrow_mut().step(
             buffer.last().unwrap(),
             &buffer[buffer.len() - 2],
             orders,
-            &unsafe { &*self.s }.trade,
+            &self.as_ref().get_ref().s.trade,
             stat_collector,
         );
     }
     pub fn update_bf(
         &mut self,
-        buffer: &Buffer,
+        buffer: &[Vec<f64>],
     ) {
-        self.gw_values.indicators.update_bf(
-            buffer.as_slice(),
-            unsafe { &(&*self.s).indications },
-            &FA_I(),
-        );
+        self.gw_values
+            .indicators
+            .update_bf(buffer, &(&*self.s).indications, &FA_I());
         self.gw_values.signals_ready.update_bf(
-            buffer.as_slice(),
-            unsafe { &*self.s },
+            buffer,
+            &self.s,
             &FA_R(),
             &self.gw_values.indicators.indicators_without_bf,
         );
         self.gw_values.signals_train.update_bf(
-            buffer.as_slice(),
-            unsafe { &*self.s },
+            buffer,
+            &self.s,
             &FA_T(),
             &self.gw_values.indicators.indicators_without_bf,
         );

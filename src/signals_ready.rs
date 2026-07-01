@@ -9,15 +9,12 @@ use bc_utils_lg::{
     },
 };
 
-use crate::{
-    buffer::Buffer,
-    indicators::{Indicators, get_in_from_settings},
-};
+use crate::indicators::{Indicators, get_in_from_settings};
 use bc_utils_lg::settings::{SETTINGS_INDS, SETTINGS_SIGNAL, SETTINGS_SIGNALS};
 
 pub fn get_signals_arg_from_settings<'a>(
     used_signals: &Vec<String>,
-    order_used_signals: &Vec<usize>,
+    procedure_used_signals: &Vec<usize>,
     settings_signals: &SETTINGS_SIGNALS,
     settings_indicators: &SETTINGS_INDS,
     src: &SRC_TRANSPOSE,
@@ -30,14 +27,14 @@ pub fn get_signals_arg_from_settings<'a>(
             &get_in_from_settings(
                 &settings_signals[used_signal].used_ind,
                 &settings_signals[used_signal].used_src,
-                &settings_signals[used_signal].order_used_src,
+                &settings_signals[used_signal].procedure_used_src,
                 settings_indicators,
                 src,
                 map_indicators,
             ),
             &get_signals_arg_from_settings(
                 &settings_signals[used_signal].used_signals,
-                &settings_signals[used_signal].order_used_signals,
+                &settings_signals[used_signal].procedure_used_signals,
                 settings_signals,
                 settings_indicators,
                 src,
@@ -46,8 +43,8 @@ pub fn get_signals_arg_from_settings<'a>(
             ),
         ));
     }
-    if !order_used_signals.is_empty() {
-        res = order_used_signals.iter().map(|i| res[*i].clone()).collect();
+    if !procedure_used_signals.is_empty() {
+        res = procedure_used_signals.iter().map(|i| res[*i].clone()).collect();
     }
     if !res.is_empty() {
         let min_len = res
@@ -102,14 +99,14 @@ pub fn get_signals_from_settings<'a>(
                         &get_in_from_settings(
                             &settings_signal.used_ind,
                             &settings_signal.used_src,
-                            &settings_signal.order_used_src,
+                            &settings_signal.procedure_used_src,
                             settings_indicators,
                             src,
                             map_indicators,
                         ),
                         &get_signals_arg_from_settings(
                             &settings_signal.used_signals,
-                            &settings_signal.order_used_signals,
+                            &settings_signal.procedure_used_signals,
                             settings_signals,
                             settings_indicators,
                             src,
@@ -195,7 +192,7 @@ impl<'a> SignalsReadyGateway<'a> {
     pub fn signals_series(
         &self,
         indications: &MAP<&'a str, f64>,
-        buffer_in: &Buffer,
+        buffer_in: &[Vec<f64>],
     ) -> MAP<&'a str, Signal> {
         unsafe { &*self.settings_signals }
             .iter()
@@ -215,18 +212,18 @@ impl<'a> SignalsReadyGateway<'a> {
                 for signals_arg_el in &setting.1.used_signals {
                     signals_arg.push(map[signals_arg_el.as_str()].clone());
                 }
-                if !setting.1.order_used_src.is_empty() {
+                if !setting.1.procedure_used_src.is_empty() {
                     src_arg = setting
                         .1
-                        .order_used_src
+                        .procedure_used_src
                         .iter()
                         .map(|i| src_arg[*i])
                         .collect();
                 }
-                if !setting.1.order_used_signals.is_empty() {
+                if !setting.1.procedure_used_signals.is_empty() {
                     src_arg = setting
                         .1
-                        .order_used_signals
+                        .procedure_used_signals
                         .iter()
                         .map(|i| src_arg[*i])
                         .collect();
@@ -256,14 +253,14 @@ impl<'a> SignalsReadyGateway<'a> {
                         &get_in_from_settings(
                             &setting.used_ind,
                             &setting.used_src,
-                            &setting.order_used_src,
+                            &setting.procedure_used_src,
                             unsafe { &*self.settings_indicators },
                             src,
                             unsafe { &(*self.indicators).indicators_without_bf },
                         ),
                         &get_signals_arg_from_settings(
                             &setting.used_signals,
-                            &setting.order_used_signals,
+                            &setting.procedure_used_signals,
                             unsafe { &*self.settings_signals },
                             unsafe { &*self.settings_indicators },
                             src,

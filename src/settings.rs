@@ -12,7 +12,10 @@ pub fn settings_cli_sync(
     let trade = &cli.trade;
     if let Some(trade) = trade {
         settings.trade.category = trade.category.clone().unwrap_or(settings.trade.category);
-        settings.trade.account_type = trade.account_type.clone().unwrap_or(settings.trade.account_type);
+        settings.trade.account_type = trade
+            .account_type
+            .clone()
+            .unwrap_or(settings.trade.account_type);
         settings.trade.klines_qty = trade.klines_qty.unwrap_or(settings.trade.klines_qty);
         settings.trade.timeframe = trade.timeframe.clone().unwrap_or(settings.trade.timeframe);
         settings.trade.leverage = trade.leverage.unwrap_or(settings.trade.leverage);
@@ -21,6 +24,10 @@ pub fn settings_cli_sync(
             .clone()
             .unwrap_or(settings.trade.mode_trade);
         settings.trade.hedge_mode = trade.hedge_mode.unwrap_or(settings.trade.hedge_mode);
+        settings.trade.symbols_time_update_ms = trade
+            .symbols_time_update_ms
+            .clone()
+            .unwrap_or(settings.trade.symbols_time_update_ms);
         settings.trade.symbols = trade.symbols.clone().unwrap_or(settings.trade.symbols);
         settings.trade.symbols_black_list = trade
             .symbols_black_list

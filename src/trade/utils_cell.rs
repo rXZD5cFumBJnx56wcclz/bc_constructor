@@ -2,10 +2,7 @@ use bc_signals::ready::ready_trait::Signal;
 use bc_utils_lg::{settings::SETTINGS_TRADE, types::maps::MAP};
 use uuid::Uuid;
 
-use crate::{
-    buffer::Buffer,
-    trade::structs::{Order, Position, TradeCell},
-};
+use crate::trade::structs::{Order, Position, TradeCell};
 
 pub fn qty(
     s: &SETTINGS_TRADE,
@@ -358,7 +355,7 @@ pub fn orders_market_extern<'a>(
     cell: &TradeCell,
     symbol: &str,
     signals_ready_series: &MAP<&'a str, Signal>,
-    buffer: &Buffer,
+    buffer: &[Vec<f64>],
 ) {
     for market_entry in &s.market_entry_orders_signals {
         vec.push(order_create(
@@ -395,7 +392,7 @@ pub fn orders_limit_extern<'a>(
     symbol: &str,
     indications_series: &MAP<&'a str, f64>,
     signals_ready_series: &MAP<&'a str, Signal>,
-    buffer: &Buffer,
+    buffer: &[Vec<f64>],
 ) {
     for limit_entry in &s.limit_entry_orders_signals {
         vec.push(order_create(
@@ -432,7 +429,7 @@ pub fn orders_trigger_extern<'a>(
     symbol: &str,
     indications_series: &MAP<&'a str, f64>,
     signals_ready_series: &MAP<&'a str, Signal>,
-    buffer: &Buffer,
+    buffer: &[Vec<f64>],
 ) {
     for trigger_market_entry in &s.trigger_market_entry_orders_signals {
         vec.push(order_create(
@@ -494,7 +491,7 @@ pub fn orders_create<'a>(
     symbol: &str,
     indications_series: &MAP<&'a str, f64>,
     signals_ready_series: &MAP<&'a str, Signal>,
-    buffer: &Buffer,
+    buffer: &[Vec<f64>],
 ) -> Vec<Order> {
     let mut res = Vec::new();
     orders_market_extern(&mut res, s, cell, symbol, signals_ready_series, buffer);

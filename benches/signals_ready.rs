@@ -14,9 +14,9 @@ use bc_constructor::signals_ready::{SignalsReady, SignalsReadyGateway};
 
 fn get_signals_ready_from_settings_1(c: &mut Criterion) {
     let s = SETTINGS_SIGNALS::from_iter([(
-        "pumpdump_1".to_string(),
+        "th_1".to_string(),
         SETTINGS_SIGNAL {
-            key: "pumpdump".to_string(),
+            key: "th".to_string(),
             used_src: vec![SETTINGS_USED_SRC { index: 0, sub_from_last_i: 0 }],
             ..Default::default()
         },

@@ -1,6 +1,6 @@
 pub const BT_SCRIPT: fn(&str) -> String = |symbol| {
     format!(
-        r##"
+        r##"\
     set datafile separator whitespace
     set datafile columnheaders
     set style fill solid
@@ -16,7 +16,7 @@ pub const BT_SCRIPT: fn(&str) -> String = |symbol| {
     "data.dat" index 0 using "time":"entry" with points pointtype 7 pointsize 2 linecolor rgb "#00C222" title "entry", \
     "data.dat" index 0 using "time":"exit" with points lw 3 pointtype 2 pointsize 2 linecolor rgb "#C20006" title "exit", \
     "data.dat" index 0 using "time":(column("pnl") != column("pnl") ? NaN : column("open")):"pnl" with labels boxed offset 0,1 title "pnl", \
-    "data.dat" index 0 using "time":(column("qty") != column("qty") ? NaN : column("open")):"pnl" with labels boxed offset 0,2 title "qty"
+    "data.dat" index 0 using "time":(column("qty") != column("qty") ? NaN : column("open")):"pnl" with labels boxed offset 0,2 title "qty"\
     "##,
     )
 };

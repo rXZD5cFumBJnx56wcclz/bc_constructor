@@ -1,6 +1,6 @@
 use std::{
-    ops::{Index, RangeBounds},
-    range::Range,
+    ops::Index,
+    slice::SliceIndex,
 };
 
 use bc_utils::other::roll_slice1;
@@ -50,23 +50,16 @@ impl Buffer {
     pub fn as_slice(&self) -> &[Vec<f64>] {
         self.0.as_slice()
     }
-}
-
-impl Index<usize> for Buffer {
-    type Output = Vec<f64>;
-    fn index(
-        &self,
-        index: usize,
-    ) -> &Self::Output {
-        &self.0[index]
+    pub fn transpose(mut self) -> Self {
+        Self((0..self.0[0].len()).map(|_| self.0.iter_mut().map(|v| v.remove(0)).collect::<Vec<f64>>()).collect::<Vec<Vec<f64>>>())
     }
 }
 
-impl Index<Range<usize>> for Buffer {
-    type Output = [Vec<f64>];
+impl<T: SliceIndex<[Vec<f64>]>> Index<T> for Buffer {
+    type Output = T::Output;
     fn index(
         &self,
-        index: Range<usize>,
+        index: T,
     ) -> &Self::Output {
         &self.0[index]
     }
