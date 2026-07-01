@@ -14,7 +14,7 @@ fn main() {
     if let Some(commands) = commands {
         match commands {
             Commands::Run => {}
-            Commands::Backtest => {}
+            Commands::Backtest { save_and_use: save_and_use } => {}
             Commands::Update => {}
             Commands::Bench => {}
         }

@@ -19,7 +19,10 @@ pub enum Commands {
     #[command(alias("upd"))]
     Update,
     #[command(alias("bt"))]
-    Backtest,
+    Backtest {
+        #[arg(long)]
+        save_and_use: bool,
+    },
     Bench,
 }
 
@@ -27,6 +30,8 @@ pub enum Commands {
 pub struct Trade {
     #[arg(long)]
     pub category: Option<String>,
+    #[arg(long)]
+    pub account_type: Option<String>,
     #[arg(long)]
     pub klines_qty: Option<usize>,
     #[arg(long)]
@@ -96,5 +101,5 @@ pub struct Paths {
     #[arg(long)]
     pub script_stat: Option<PathBuf>,
     #[arg(long)]
-    pub exch_data: Option<PathBuf>,
+    pub src_data: Option<PathBuf>,
 }

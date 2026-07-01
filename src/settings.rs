@@ -12,6 +12,7 @@ pub fn settings_cli_sync(
     let trade = &cli.trade;
     if let Some(trade) = trade {
         settings.trade.category = trade.category.clone().unwrap_or(settings.trade.category);
+        settings.trade.account_type = trade.account_type.clone().unwrap_or(settings.trade.account_type);
         settings.trade.klines_qty = trade.klines_qty.unwrap_or(settings.trade.klines_qty);
         settings.trade.timeframe = trade.timeframe.clone().unwrap_or(settings.trade.timeframe);
         settings.trade.leverage = trade.leverage.unwrap_or(settings.trade.leverage);
@@ -87,10 +88,10 @@ pub fn settings_cli_sync(
         .clone()
         .unwrap_or(settings.files_path.script_stat);
     settings.files_path.backtest = paths.backtest.clone();
-    settings.files_path.exch_data = paths
-        .exch_data
+    settings.files_path.src_data = paths
+        .src_data
         .clone()
-        .unwrap_or(settings.files_path.exch_data);
+        .unwrap_or(settings.files_path.src_data);
     settings.files_path.train_model = paths.train_model.clone();
     settings
 }
