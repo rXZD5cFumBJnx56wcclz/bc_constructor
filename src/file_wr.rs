@@ -6,7 +6,7 @@ use std::path::PathBuf;
 
 use bc_utils::other::transpose;
 use bc_utils_lg::structs::settings::SETTINGS_FILES_PATH;
-use bc_utils_lg::types::maps::{MAP, MAP_LINK};
+use bc_utils_lg::types::maps::{MAP, MAP_LINK, MapTrait};
 use bincode::config::standard;
 use bincode::serde::{decode_from_slice, encode_to_vec};
 
@@ -20,13 +20,15 @@ fn get_backtest_dir(
     format!("{dir}/{time}/{symbol}",)
 }
 
-fn write_any_data_column<'a, T>(
+fn write_any_data_column<'a, T, M>(
     path: &str,
     file_path: &str,
-    data: &[T],
+    data: &'a [T],
 ) -> std::io::Result<()>
 where
-    T: Borrow<MAP<String, Vec<f64>>>,
+    T: Borrow<M>,
+    M: MapTrait<'a, String, Vec<f64>>,
+    M: 'a,
 {
     create_dir_all(path)?;
     let mut buf = BufWriter::new(File::create_new(file_path)?);
@@ -36,6 +38,7 @@ where
             "{}",
             el.borrow()
                 .keys()
+                .into_iter()
                 .map(|v| v.as_str())
                 .collect::<Vec<&str>>()
                 .join(" ")
@@ -162,7 +165,11 @@ impl FileWR<'_> {
         if !self.s.backtest.as_os_str().is_empty() {
             self.script_backtest_write(&dir, symbol)?;
             write_any_data_column(&dir, &format!("{dir}/data.dat"), data)?;
-            write_any_data_column(&dir, &format!("{dir}/stat_columns.dat"), &[stat_columns])?;
+            write_any_data_column::<&MAP<_, _>, MAP<_, _>>(
+                &dir,
+                &format!("{dir}/stat_columns.dat"),
+                &[stat_columns],
+            )?;
             write_any_data_value(&dir, &format!("{dir}/stat_values.dat",), &stat_values)?;
         }
         Ok(())

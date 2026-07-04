@@ -1,5 +1,4 @@
 use std::error::Error;
-use std::ops::Index;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use bc_exch_api_funcs::bybit::{exch_struct::BYBIT, market::src::Src};
@@ -61,11 +60,7 @@ pub async fn backtest(
     }
     let stat_collector_data = stat_collector.to_data();
     let stat_collector_data_vec = stat_collector_data.to_vec();
-    let after_trade_data = AfterTradeData::new(
-        s,
-        &stat_collector_data_vec[0],
-        fa_indicators,
-    );
+    let after_trade_data = AfterTradeData::new(s, &stat_collector_data_vec[0], fa_indicators);
     file_wr.backtest_write(
         &stat_collector_data,
         &after_trade_data.to_stat_columns(&stat_collector_data_vec[0]),
@@ -79,6 +74,10 @@ pub async fn backtest(
 
 pub async fn backtest_multi(
     s: &SETTINGS,
+    fa_indicators: &FA<SETTINGS_IND, Box<dyn Indicator>>,
+    fa_signals_ready: &FA<SETTINGS_SIGNAL, Box<dyn SignalReady>>,
+    fa_signals_train: &FA<SETTINGS_SIGNAL, Box<dyn SignalTrain>>,
+    fa_orders_collectors: &FA<SETTINGS_ORDER_COLLECTOR, Box<dyn OrderCollector>>,
     addition_flags: &Option<AdditionFlags>,
     addition_args: &Option<AdditionArgs>,
 ) -> Result<(), Box<dyn Error>> {
@@ -106,7 +105,18 @@ pub async fn backtest_multi(
     .iter()
     {
         dbg!(symbol);
-        backtest(symbol, s, addition_flags, addition_args, time).await?;
+        backtest(
+            symbol,
+            s,
+            fa_indicators,
+            fa_signals_ready,
+            fa_signals_train,
+            fa_orders_collectors,
+            addition_flags,
+            addition_args,
+            time,
+        )
+        .await?;
     }
     Ok(())
 }

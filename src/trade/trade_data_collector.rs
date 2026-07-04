@@ -219,12 +219,20 @@ impl<'a> AfterTradeData<'a> {
         &self,
         data: &[Vec<f64>],
     ) -> MAP<String, f64> {
-        self.indicators_gateway_values.indications_series(data).into_iter().map(|(k, v)| (k.to_string(), v)).collect()
+        self.indicators_gateway_values
+            .indications_series(data)
+            .into_iter()
+            .map(|(k, v)| (k.to_string(), v))
+            .collect()
     }
     pub fn to_stat_columns(
         &self,
         data: &[Vec<f64>],
     ) -> MAP<String, Vec<f64>> {
-        self.indicators_gateway_columns.indications_vec(data).into_iter().map(|(k, v)| (k.to_string(), v)).collect()
+        self.indicators_gateway_columns
+            .indications_vec(data)
+            .into_iter()
+            .map(|(k, v)| (k.to_string(), v))
+            .collect()
     }
 }

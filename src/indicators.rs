@@ -1,8 +1,5 @@
 use bc_indicators::ready_imports::{BF_INDICATOR, Indicator};
-use bc_utils_lg::types::{
-    maps::{FUNCS_EXTRACT_ARGS_TYPE, MAP},
-    structures::SRC_TRANSPOSE,
-};
+use bc_utils_lg::types::maps::{FUNCS_EXTRACT_ARGS_TYPE, MAP};
 use rustc_hash::FxHashMap;
 
 use bc_utils_lg::structs::settings::{SETTINGS_IND, SETTINGS_INDS, SETTINGS_USED_SRC};

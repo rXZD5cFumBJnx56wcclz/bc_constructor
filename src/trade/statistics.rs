@@ -2,7 +2,6 @@ use core::f64;
 use std::cell::Ref;
 use std::ops::Deref;
 
-use bc_utils::other::transpose;
 use bc_utils_lg::structs::trade::TradeCell;
 use bc_utils_lg::types::maps::MAP;
 use bc_utils_lg::{structs::settings::SETTINGS_TRADE, types::maps::MAP_LINK};
