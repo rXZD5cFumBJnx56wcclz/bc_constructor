@@ -1,15 +1,15 @@
 use std::any::Any;
 
-use bc_indicators::indicators::ready_imports::*;
-use bc_indicators::indicators::trend_ma::TREND_MA;
+use bc_indicators::ready_imports::*;
+use bc_indicators::trend_ma::TREND_MA;
 use bc_pack_indicators::FUNCS_EXTRACT_ARGS as FUNCS_EXTRACT_ARGS_IND;
 use bc_pack_signals_train::FUNCS_EXTRACT_ARGS as FUNCS_EXTRACT_ARGS_ST;
 use bc_signals::train::mm::MM;
 use bc_signals::train::ready_imports::*;
-use bc_utils_lg::settings::{
+use bc_utils_lg::statics::prices::{SRC_NOMAP, SRC_TRANSPOSE};
+use bc_utils_lg::structs::settings::{
     SETTINGS_IND, SETTINGS_INDS, SETTINGS_SIGNAL, SETTINGS_SIGNALS, SETTINGS_USED_SRC,
 };
-use bc_utils_lg::statics::prices::{SRC_NOMAP, SRC_TRANSPOSE};
 use bc_utils_lg::types::maps::MAP;
 
 use bc_constructor::indicators::*;

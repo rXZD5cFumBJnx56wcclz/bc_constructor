@@ -2,10 +2,10 @@ use std::sync::LazyLock;
 
 use bc_constructor::trade::structs::{Order, Position, TradeCell};
 use bc_signals::ready::ready_trait::Signal;
-use bc_utils_lg::settings::SETTINGS_ORDER_PLACE;
+use bc_utils_lg::structs::settings::SETTINGS_ORDER_PLACE;
 
 use bc_constructor::trade::utils_cell::*;
-use bc_utils_lg::settings::SETTINGS_TRADE;
+use bc_utils_lg::structs::settings::SETTINGS_TRADE;
 
 static S: LazyLock<SETTINGS_TRADE> = LazyLock::new(|| SETTINGS_TRADE {
     signal_hold: 0.,

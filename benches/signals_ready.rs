@@ -2,10 +2,10 @@ use std::hint::black_box;
 
 use bc_pack_indicators::FUNCS_EXTRACT_ARGS as FUNCS_EXTRACT_ARGS_IND;
 use bc_pack_signals_ready::FUNCS_EXTRACT_ARGS as FUNCS_EXTRACT_ARGS_SR;
-use bc_utils_lg::settings::{
+use bc_utils_lg::statics::prices::SRC_TRANSPOSE;
+use bc_utils_lg::structs::settings::{
     SETTINGS_IND, SETTINGS_INDS, SETTINGS_SIGNAL, SETTINGS_SIGNALS, SETTINGS_USED_SRC,
 };
-use bc_utils_lg::statics::prices::SRC_TRANSPOSE;
 use bc_utils_lg::types::maps::MAP;
 use criterion::{Criterion, criterion_group, criterion_main};
 

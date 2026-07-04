@@ -1,8 +1,7 @@
-use bc_signals::ready::ready_trait::Signal;
-use bc_utils_lg::{settings::SETTINGS_TRADE, types::maps::MAP};
+use bc_utils_lg::structs::signals::Signal;
+use bc_utils_lg::structs::trade::{Order, Position, TradeCell};
+use bc_utils_lg::{structs::settings::SETTINGS_TRADE, types::maps::MAP};
 use uuid::Uuid;
-
-use crate::trade::structs::{Order, Position, TradeCell};
 
 pub fn qty(
     s: &SETTINGS_TRADE,
@@ -494,24 +493,29 @@ pub fn orders_create<'a>(
     buffer: &[Vec<f64>],
 ) -> Vec<Order> {
     let mut res = Vec::new();
-    orders_market_extern(&mut res, s, cell, symbol, signals_ready_series, buffer);
-    orders_limit_extern(
-        &mut res,
-        s,
-        cell,
-        symbol,
-        indications_series,
-        signals_ready_series,
-        buffer,
-    );
-    orders_trigger_extern(
-        &mut res,
-        s,
-        cell,
-        symbol,
-        indications_series,
-        signals_ready_series,
-        buffer,
-    );
+    if signals_ready_series
+        .values()
+        .any(|v| v.signal != s.signal_hold)
+    {
+        orders_market_extern(&mut res, s, cell, symbol, signals_ready_series, buffer);
+        orders_limit_extern(
+            &mut res,
+            s,
+            cell,
+            symbol,
+            indications_series,
+            signals_ready_series,
+            buffer,
+        );
+        orders_trigger_extern(
+            &mut res,
+            s,
+            cell,
+            symbol,
+            indications_series,
+            signals_ready_series,
+            buffer,
+        );
+    }
     res
 }

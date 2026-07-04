@@ -6,13 +6,15 @@ edition = "2024"
 [dependencies]
 bc_utils_lg = {path = "../bc_utils_lg"}
 bc_indicators = {path = "../bc_indicators"}
+bc_signals = {path = "../bc_signals"}
+bc_orders_collectors = {path="../bc_orders_collectors"}
 bc_exch_api_funcs = {path = "../bc_exch_api_funcs"}
 bc_utils = {path = "../bc_utils"}
-bc_signals = {path = "../bc_signals"}
 
 bc_pack_indicators = {path = "../bc_pack_indicators"}
 bc_pack_signals_ready = {path = "../bc_pack_signals_ready"}
 bc_pack_signals_train = {path = "../bc_pack_signals_train"} 
+bc_pack_orders_collectors = {path = "../bc_pack_orders_collectors"} 
 
 rustc-hash = "1.1"
 serde ={ version = "1.0", features = ["derive"]}

@@ -31,6 +31,8 @@ pub enum Commands {
 pub struct AdditionFlags {
     #[arg(long)]
     pub save_data: bool,
+    #[arg(long)]
+    pub clear: bool,
 }
 
 #[derive(Args, Clone, Debug)]

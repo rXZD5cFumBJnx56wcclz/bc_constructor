@@ -1,7 +1,7 @@
-use bc_indicators::indicators::ready_imports::Indicator;
+use bc_indicators::ready_imports::Indicator;
 use bc_signals::train::ready_imports::*;
 use bc_utils_lg::{
-    settings::SETTINGS,
+    structs::settings::SETTINGS,
     types::{
         maps::{FUNCS_EXTRACT_ARGS_TYPE, MAP},
         structures::SRC_TRANSPOSE,
@@ -9,7 +9,7 @@ use bc_utils_lg::{
 };
 
 use crate::indicators::{Indicators, get_in_from_settings};
-use bc_utils_lg::settings::{SETTINGS_INDS, SETTINGS_SIGNAL, SETTINGS_SIGNALS};
+use bc_utils_lg::structs::settings::{SETTINGS_INDS, SETTINGS_SIGNAL, SETTINGS_SIGNALS};
 
 pub fn get_signals_arg_from_settings<'a>(
     used_signals: &Vec<String>,
@@ -43,7 +43,10 @@ pub fn get_signals_arg_from_settings<'a>(
         ));
     }
     if !procedure_used_signals.is_empty() {
-        res = procedure_used_signals.iter().map(|i| res[*i].clone()).collect();
+        res = procedure_used_signals
+            .iter()
+            .map(|i| res[*i].clone())
+            .collect();
     }
     if !res.is_empty() {
         let min_len = res

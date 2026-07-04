@@ -1,8 +1,9 @@
+pub mod backtest;
 pub mod buffer;
 pub mod cli;
 pub mod file_wr;
 pub mod indicators;
-pub mod main_funcs;
+pub mod orders_collectors;
 pub mod settings;
 pub mod signals_ready;
 pub mod signals_train;

@@ -1,14 +1,14 @@
 use std::any::Any;
 
-use bc_indicators::indicators::ready_imports::Indicator;
-use bc_indicators::indicators::{rma::RMA, rsi::RSI};
+use bc_indicators::ready_imports::Indicator;
+use bc_indicators::{rma::RMA, rsi::RSI};
 use bc_utils::nums::{coll_nz, round_f};
 use bc_utils_lg::statics::prices::{CLOSE, OPEN, OPEN_LAST, SRC_NOMAP, SRC_TRANSPOSE};
 use bc_utils_lg::types::maps::MAP;
 
 use bc_constructor::indicators::*;
 use bc_pack_indicators::FUNCS_EXTRACT_ARGS;
-use bc_utils_lg::settings::{SETTINGS_IND, SETTINGS_INDS, SETTINGS_USED_SRC};
+use bc_utils_lg::structs::settings::{SETTINGS_IND, SETTINGS_INDS, SETTINGS_USED_SRC};
 
 #[test]
 fn indicators_from_settings_without_bf_res_1() {

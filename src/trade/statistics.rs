@@ -1,14 +1,14 @@
 use core::f64;
 use std::cell::Ref;
+use std::ops::Deref;
 
-use bc_utils_lg::settings::SETTINGS_TRADE;
+use bc_utils::other::transpose;
+use bc_utils_lg::structs::trade::TradeCell;
 use bc_utils_lg::types::maps::MAP;
+use bc_utils_lg::{structs::settings::SETTINGS_TRADE, types::maps::MAP_LINK};
 use num_traits::Float;
 
-use crate::trade::{
-    structs::TradeCell,
-    utils_cell::{price_is_real_time, qty_pnl},
-};
+use crate::trade::utils_cell::{price_is_real_time, qty_pnl};
 
 #[derive(Debug)]
 pub struct StatCollector<'a> {
@@ -38,6 +38,24 @@ impl<'a> IntoIterator for &'a StatCollector<'a> {
 
     fn into_iter(self) -> Self::IntoIter {
         (&self.cells).into_iter()
+    }
+}
+
+pub struct StatData(Vec<MAP_LINK<String, Vec<f64>>>);
+
+impl StatData {
+    pub fn to_vec(&self) -> Vec<Vec<Vec<f64>>> {
+        self.0
+            .iter()
+            .map(|v| v.iter().map(|v| v.1.clone()).collect::<Vec<Vec<f64>>>())
+            .collect::<Vec<Vec<Vec<f64>>>>()
+    }
+}
+
+impl Deref for StatData {
+    type Target = Vec<MAP_LINK<String, Vec<f64>>>;
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 
@@ -127,7 +145,9 @@ impl StatCollector<'_> {
     pub fn to_exit(&self) -> Vec<f64> {
         self.into_iter()
             .map(|c| {
-                if !c.positions.borrow().is_empty() && c.positions.borrow().values().next().unwrap().is_active == false {
+                if !c.positions.borrow().is_empty()
+                    && c.positions.borrow().values().next().unwrap().is_active == false
+                {
                     c.src[0]
                 } else {
                     f64::NAN
@@ -157,55 +177,75 @@ impl StatCollector<'_> {
     pub fn to_positions_orders(&self) -> Vec<f64> {
         StatCollector::to_all(&[self.to_some(|v| v.positions.borrow()), self.to_entry_and_exit()])
     }
-    pub fn to_data(&self) -> Vec<MAP<String, Vec<f64>>> {
-        let main_columns = [
-            "time", "open", "high", "low", "close", "volume", "turnover",
-            "capital", "entry", "exit", "pnl", "qty",
-        ];
-        let mut res: Vec<MAP<String, Vec<f64>>> = Default::default();
-        res.push(
-            self.into_iter()
-                .map(|c| &c.src)
-                .zip(self.to_capital())
-                .zip(self.to_entry())
-                .zip(self.to_exit())
-                .zip(StatCollector::to_all(&[self.to_exit(), self.to_pnl()]))
-                .zip(StatCollector::to_all(&[
-                    self.into_iter()
-                        .map(|c| if !c.positions.borrow().is_empty() {c.positions.borrow().values().next().unwrap().qty} else {f64::NAN})
-                        .collect(),
-                    self.to_entry_and_exit(),
-                ]))
-                .enumerate()
-                .map(|(i, (((((row, capital), entry), exit), pnl), qty))| {
-                    let mut v = vec![];
-                    v.push(i as f64);
-                    v.extend_from_slice(&row[1..]);
-                    v.extend_from_slice(&[capital, entry, exit, pnl, qty]);
-                    v
-                })
-                .fold(MAP::default(), |mut map, row| {
-                    for (i, key) in main_columns.iter().enumerate() {    
-                        map.entry(key.to_string())
-                            .and_modify(|vec: &mut Vec<f64>| vec.push(row[i]))
-                            .or_insert(vec![row[i]]);
-                    }
-                    map
-                }),
-        );
-        res.push(self.to_positions_orders().into_iter().del_nan(1).fold(
-            MAP::default(),
-            |mut map, el| {
-                map.entry("time".to_string())
-                    .and_modify(|v: &mut Vec<f64>| v.push(el.0 as f64))
-                    .or_insert(vec![el.0 as f64]);
-                map.entry("position_orders".to_string())
-                    .and_modify(|v| v.push(el.1))
-                    .or_insert(vec![el.1]);
-                map
+    pub fn to_data(&self) -> StatData {
+        StatData(vec![
+            MAP_LINK::from_iter([
+                (
+                    "time".to_string(),
+                    (0..self.cells.len())
+                        .map(|v| v as f64)
+                        .collect::<Vec<f64>>(),
+                ),
+                (
+                    "open".to_string(),
+                    self.into_iter().map(|v| v.src[1]).collect(),
+                ),
+                (
+                    "high".to_string(),
+                    self.into_iter().map(|v| v.src[2]).collect(),
+                ),
+                (
+                    "low".to_string(),
+                    self.into_iter().map(|v| v.src[3]).collect(),
+                ),
+                (
+                    "close".to_string(),
+                    self.into_iter().map(|v| v.src[4]).collect(),
+                ),
+                (
+                    "volume".to_string(),
+                    self.into_iter().map(|v| v.src[5]).collect(),
+                ),
+                (
+                    "turnover".to_string(),
+                    self.into_iter().map(|v| v.src[6]).collect(),
+                ),
+                ("capital".to_string(), self.to_capital()),
+                ("entry".to_string(), self.to_entry()),
+                ("exit".to_string(), self.to_exit()),
+                (
+                    "pnl".to_string(),
+                    StatCollector::to_all(&[self.to_exit(), self.to_pnl()]),
+                ),
+                (
+                    "qty".to_string(),
+                    StatCollector::to_all(&[
+                        self.into_iter()
+                            .map(|c| {
+                                if !c.positions.borrow().is_empty() {
+                                    c.positions.borrow().values().next().unwrap().qty
+                                } else {
+                                    f64::NAN
+                                }
+                            })
+                            .collect(),
+                        self.to_entry_and_exit(),
+                    ]),
+                ),
+            ]),
+            {
+                let mut bind = self
+                    .to_positions_orders()
+                    .into_iter()
+                    .del_nan(1)
+                    .map(|(time, pos)| vec![time as f64, pos])
+                    .collect::<Vec<Vec<f64>>>();
+                MAP_LINK::from_iter([
+                    ("time".to_string(), bind.remove(0)),
+                    ("positions_orders".to_string(), bind.remove(0)),
+                ])
             },
-        ));
-        res
+        ])
     }
 }
 

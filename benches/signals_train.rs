@@ -1,8 +1,8 @@
 use std::hint::black_box;
 
 use bc_pack_signals_train::FUNCS_EXTRACT_ARGS as FUNCS_EXTRACT_ARGS_ST;
-use bc_utils_lg::settings::{SETTINGS_SIGNAL, SETTINGS_SIGNALS, SETTINGS_USED_SRC};
 use bc_utils_lg::statics::prices::SRC_TRANSPOSE;
+use bc_utils_lg::structs::settings::{SETTINGS_SIGNAL, SETTINGS_SIGNALS, SETTINGS_USED_SRC};
 use bc_utils_lg::types::maps::MAP;
 use criterion::{Criterion, criterion_group, criterion_main};
 

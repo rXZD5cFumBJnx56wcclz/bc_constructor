@@ -1,8 +1,13 @@
 #![allow(non_camel_case_types)]
 
-use bc_utils_lg::settings::SETTINGS;
+use std::error::Error;
 
-use crate::cli::Cli;
+use bc_utils_lg::structs::settings::SETTINGS;
+
+use crate::{
+    cli::{AdditionArgs, AdditionFlags, Cli},
+    file_wr::FileWR,
+};
 
 pub fn settings_cli_sync(
     mut settings: SETTINGS,
@@ -101,4 +106,24 @@ pub fn settings_cli_sync(
         .unwrap_or(settings.files_path.src_data);
     settings.files_path.train_model = paths.train_model.clone();
     settings
+}
+
+pub fn check_addition_flags(
+    addition_flags: &Option<AdditionFlags>,
+    src: &Vec<Vec<f64>>,
+    file_wr: &FileWR,
+) -> Result<(), Box<dyn Error>> {
+    if let Some(addition_flags) = addition_flags {
+        if addition_flags.save_data {
+            file_wr.src_write(&src)?;
+        }
+        if addition_flags.clear {
+            file_wr.backtests_del();
+        }
+    }
+    Ok(())
+}
+
+pub fn check_addition_args(_addition_args: &Option<AdditionArgs>) -> Result<(), Box<dyn Error>> {
+    Ok(())
 }

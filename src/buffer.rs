@@ -1,9 +1,6 @@
-use std::{
-    ops::Index,
-    slice::SliceIndex,
-};
+use std::{ops::Index, slice::SliceIndex};
 
-use bc_utils::other::roll_slice1;
+use bc_utils::other::{roll_slice1, transpose};
 
 pub struct Buffer(pub Vec<Vec<f64>>);
 
@@ -50,8 +47,8 @@ impl Buffer {
     pub fn as_slice(&self) -> &[Vec<f64>] {
         self.0.as_slice()
     }
-    pub fn transpose(mut self) -> Self {
-        Self((0..self.0[0].len()).map(|_| self.0.iter_mut().map(|v| v.remove(0)).collect::<Vec<f64>>()).collect::<Vec<Vec<f64>>>())
+    pub fn transpose(self) -> Self {
+        Self(transpose(self.0))
     }
 }
 

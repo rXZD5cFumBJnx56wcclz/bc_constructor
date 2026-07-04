@@ -1,15 +1,18 @@
-use bc_indicators::indicators::ready_imports::{BF_INDICATOR, Indicator};
+use bc_indicators::ready_imports::{BF_INDICATOR, Indicator};
 use bc_utils_lg::types::{
     maps::{FUNCS_EXTRACT_ARGS_TYPE, MAP},
     structures::SRC_TRANSPOSE,
 };
 use rustc_hash::FxHashMap;
 
-use bc_utils_lg::settings::{SETTINGS_IND, SETTINGS_INDS, SETTINGS_USED_SRC};
+use bc_utils_lg::structs::settings::{SETTINGS_IND, SETTINGS_INDS, SETTINGS_USED_SRC};
 
-
-pub fn get_w_max(s: &SETTINGS_INDS, funcs_extract_args: &FxHashMap<&str, fn(&SETTINGS_IND) -> Box<dyn Indicator>>) -> usize {
-    get_indicators_from_settings_without_bf(s, funcs_extract_args).values()
+pub fn get_w_max(
+    s: &SETTINGS_INDS,
+    funcs_extract_args: &FxHashMap<&str, fn(&SETTINGS_IND) -> Box<dyn Indicator>>,
+) -> usize {
+    get_indicators_from_settings_without_bf(s, funcs_extract_args)
+        .values()
         .map(|v| v.w())
         .max()
         .unwrap()
@@ -20,7 +23,7 @@ pub fn get_in_from_settings<'a>(
     used_src: &Vec<SETTINGS_USED_SRC>,
     procedure_used: &Vec<usize>,
     settings: &SETTINGS_INDS,
-    src: &SRC_TRANSPOSE,
+    src: &[Vec<f64>],
     map_indicators: &MAP<&'a str, Box<dyn Indicator>>,
 ) -> Vec<Vec<f64>> {
     let mut res = vec![];
@@ -171,7 +174,12 @@ impl<'a> IndicatorsGateway<'a> {
                     src_arg.push(map[ui_el.as_str()]);
                 }
                 if setting.1.procedure_used.len() != 0 {
-                    src_arg = setting.1.procedure_used.iter().map(|i| src_arg[*i]).collect();
+                    src_arg = setting
+                        .1
+                        .procedure_used
+                        .iter()
+                        .map(|i| src_arg[*i])
+                        .collect();
                 }
                 let indicator = unsafe { &(&(*self.indicators).indicators)[key_uniq_str] };
                 map.insert(
@@ -183,7 +191,7 @@ impl<'a> IndicatorsGateway<'a> {
     }
     pub fn indications_vec(
         &self,
-        src: &SRC_TRANSPOSE,
+        src: &[Vec<f64>],
     ) -> MAP<&'a str, Vec<f64>> {
         unsafe { &*self.settings }
             .iter()
