@@ -55,7 +55,7 @@ where
                     .join(" ")
             )?;
         }
-        writeln!(buf, "\n\n");
+        writeln!(buf, "\n\n")?;
     }
 
     Ok(())

@@ -1,4 +1,4 @@
 pub mod statistics;
 pub mod structs;
-pub mod trade_data_collector;
+pub mod trade_data;
 pub mod utils_cell;

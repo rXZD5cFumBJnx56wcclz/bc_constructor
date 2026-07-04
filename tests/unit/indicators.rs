@@ -5,6 +5,7 @@ use bc_indicators::{rma::RMA, rsi::RSI};
 use bc_utils::nums::{coll_nz, round_f};
 use bc_utils_lg::statics::prices::{CLOSE, OPEN, OPEN_LAST, SRC_NOMAP, SRC_TRANSPOSE};
 use bc_utils_lg::types::maps::MAP;
+use pretty_assertions::assert_eq as assert_eq_pr;
 
 use bc_constructor::indicators::*;
 use bc_pack_indicators::FUNCS_EXTRACT_ARGS;
@@ -29,7 +30,7 @@ fn indicators_from_settings_without_bf_res_1() {
     let res_1 = res.get("rsi_1").unwrap().as_ref();
     let rsi_test_1 = RSI::new(10);
     let rsi_test_2 = (res_1 as &dyn Any).downcast_ref::<RSI>().unwrap();
-    assert_eq!(&rsi_test_1, rsi_test_2);
+    assert_eq_pr!(&rsi_test_1, rsi_test_2);
 }
 
 #[test]
@@ -112,8 +113,8 @@ fn indication_res_1() {
     ) + CLOSE[47]
         + OPEN_LAST)
         / 3.;
-    assert_eq!(round_f(res_1["avg_1"], &4,), round_f(res_2, &4,),);
-    assert_eq!(res_1["minus_1"], 1.0);
+    assert_eq_pr!(round_f(res_1["avg_1"], &4,), round_f(res_2, &4,),);
+    assert_eq_pr!(res_1["minus_1"], 1.0);
 }
 
 #[test]
@@ -134,7 +135,7 @@ fn indications_vec_res_1() {
     let indicators_gw = IndicatorsGateway::new(&indicators, &settings);
     let res_1 = indicators_gw.indications_vec(&SRC_TRANSPOSE)["rsi_1"].clone();
     let res_2 = RSI::new(2).ind_vec(&SRC_NOMAP);
-    assert_eq!(
+    assert_eq_pr!(
         coll_nz::<Vec<f64>, _, _>(&res_1, 0.0),
         coll_nz::<Vec<f64>, _, _>(&res_2, 0.0)
     );

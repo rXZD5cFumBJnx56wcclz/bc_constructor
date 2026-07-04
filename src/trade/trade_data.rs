@@ -1,4 +1,4 @@
-use std::borrow::{Borrow, BorrowMut};
+use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::marker::PhantomPinned;
 use std::pin::Pin;
@@ -73,7 +73,7 @@ pub struct TradeData<'a> {
     pub indicators_gateway: IndicatorsGateway<'a>,
     pub signals_ready_gateway: SignalsReadyGateway<'a>,
     pub signals_train_gateway: SignalsTrainGateway<'a>,
-    pub orders_collectors_gateway: OrdersCollectorsGateway<'a>,
+    pub orders_collectors_gateway: OrdersCollectorsGateway,
     pub cell: RefCell<TradeCell>,
     pub symbol: &'a str,
     s: &'a SETTINGS,
@@ -91,7 +91,6 @@ impl<'a> TradeData<'a> {
         fa_orders_collectors: &FA<SETTINGS_ORDER_COLLECTOR, Box<dyn OrderCollector>>,
     ) -> Pin<Box<Self>> {
         let mut res = Box::pin(Self {
-            // fa change on fa args in new
             gw_values: GWValues::new(
                 s,
                 fa_indicators,
@@ -120,10 +119,7 @@ impl<'a> TradeData<'a> {
                 &s.signals_train,
                 &s.indications,
             ),
-            orders_collectors_gateway: OrdersCollectorsGateway::new(
-                ptr::null(),
-                &s.trade.order_collectors,
-            ),
+            orders_collectors_gateway: OrdersCollectorsGateway::new(ptr::null()),
             _pin: PhantomPinned,
         });
         let outer_mut = unsafe { Pin::as_mut(&mut res).get_unchecked_mut() };

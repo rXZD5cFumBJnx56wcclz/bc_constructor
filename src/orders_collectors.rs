@@ -24,17 +24,13 @@ impl OrdersCollectors {
     }
 }
 
-pub struct OrdersCollectorsGateway<'a> {
+pub struct OrdersCollectorsGateway {
     pub order_collectors: *const OrdersCollectors,
-    s: &'a SETTINGS_ORDER_COLLECTORS,
 }
 
-impl<'a> OrdersCollectorsGateway<'a> {
-    pub fn new(
-        order_collectors: *const OrdersCollectors,
-        s: &'a SETTINGS_ORDER_COLLECTORS,
-    ) -> Self {
-        Self { order_collectors, s }
+impl<'a> OrdersCollectorsGateway {
+    pub fn new(order_collectors: *const OrdersCollectors) -> Self {
+        Self { order_collectors }
     }
     pub fn collect_orders(
         &self,

@@ -167,7 +167,7 @@ pub fn modify_positions(
                     position.set_is_active(false);
                 }
             } else {
-                position.avg_open_price = (order.price + position.avg_open_price) / 2.0;
+                position.avg_open_price = (order.price.unwrap() + position.avg_open_price) / 2.0;
                 position.qty += order.qty;
                 cell.capital -= order.qty;
             }
@@ -181,7 +181,7 @@ pub fn modify_positions(
                 order.side.clone(),
                 qty,
                 order.leverage,
-                order.price,
+                price_is_real_time(s.work_in_real_time, &cell.src),
                 order.position_idx.clone(),
                 true,
             )
@@ -194,25 +194,40 @@ pub fn modify_positions_or_not(
     order: &Order,
 ) {
     if {
-        let trigger_price = price_with_type(&s, &cell.src, &order.trigger_by);
-        let last = price_with_type(&s, &cell.src_l, &order.trigger_by);
-        let (crossed, direction) = price_crossed(trigger_price, order.trigger_price, last, last);
-        order.is_trigger() && crossed && direction == order.trigger_direction
+        let trigger_price = price_with_type(
+            &s,
+            &cell.src,
+            &order.trigger_by.as_ref().unwrap_or(&"".to_string()),
+        );
+        let last = price_with_type(
+            &s,
+            &cell.src_l,
+            &order.trigger_by.as_ref().unwrap_or(&"".to_string()),
+        );
+        let (crossed, direction) = price_crossed(
+            trigger_price,
+            order.trigger_price.unwrap_or_default(),
+            last,
+            last,
+        );
+        order.is_trigger() && crossed && direction == order.trigger_direction.unwrap()
     } || {
         order.is_limit()
             && price_crossed(
                 price_is_real_time(s.work_in_real_time, &cell.src),
-                order.price,
+                order.price.unwrap(),
                 cell.src[2],
                 cell.src[3],
             )
             .0
     } {
-        if order.is_limit() && order.price != order.trigger_price {
+        if order.is_limit() && order.price.unwrap() != order.trigger_price.unwrap_or_default() {
             cell.limit_orders
                 .borrow_mut()
                 .insert(order.order_link_id.clone(), order.clone());
-        } else if order.is_market() || order.price == order.trigger_price {
+        } else if order.is_market()
+            || order.price.unwrap_or_default() == order.trigger_price.unwrap_or_default()
+        {
             modify_positions(s, cell, &order);
         }
         cell.trigger_orders
@@ -235,7 +250,7 @@ pub fn trigger_direction(
 
 pub fn tp_sl_orders(
     tp_or_sl: &str,
-    s_key: fn(&SETTINGS_TRADE) -> &Vec<(f64, f64, f64)>,
+    settings: &Vec<(f64, f64, f64)>,
     s: &SETTINGS_TRADE,
     symbol: &str,
     side: &str,
@@ -244,7 +259,7 @@ pub fn tp_sl_orders(
     position_idx: &str,
     trigger_direction: usize,
 ) -> Vec<Order> {
-    s_key(s)
+    settings
         .iter()
         .map(
             |(percent_of_position, amount_of_position, percent_of_entry_price)| {
@@ -255,25 +270,27 @@ pub fn tp_sl_orders(
                     *amount_of_position,
                     *percent_of_position,
                     s.leverage,
-                    0.,
+                    None,
                     "market".to_string(),
                     Default::default(),
                     Default::default(),
-                    "last".to_string(),
-                    price_is_real_time
-                        * (1.
-                            + *percent_of_entry_price
-                                * if position_idx == "1" {
-                                    1.
-                                } else {
-                                    -1.
-                                }
-                                * if tp_or_sl == "tp" {
-                                    1.
-                                } else {
-                                    -1.
-                                }),
-                    trigger_direction,
+                    Some("last".to_string()),
+                    Some(
+                        price_is_real_time
+                            * (1.
+                                + *percent_of_entry_price
+                                    * if position_idx == "1" {
+                                        1.
+                                    } else {
+                                        -1.
+                                    }
+                                    * if tp_or_sl == "tp" {
+                                        1.
+                                    } else {
+                                        -1.
+                                    }),
+                    ),
+                    Some(trigger_direction),
                     true,
                     Uuid::new_v4().to_string(),
                     position_idx.to_string(),
@@ -288,8 +305,8 @@ pub fn order_create(
     s: &SETTINGS_TRADE,
     cell: &TradeCell,
     symbol: &str,
-    price_limit: f64,
-    price_trigger: f64,
+    price_limit: Option<f64>,
+    price_trigger: Option<f64>,
     signal: &Signal,
     src: &[f64],
     type_order: &str,
@@ -311,7 +328,7 @@ pub fn order_create(
         if position_not_created {
             tp_sl_orders(
                 "tp",
-                |v| &v.takeprofit,
+                &s.takeprofit,
                 s,
                 symbol,
                 &side,
@@ -326,7 +343,7 @@ pub fn order_create(
         if position_not_created {
             tp_sl_orders(
                 "sl",
-                |v| &v.stoploss,
+                &s.stoploss,
                 s,
                 symbol,
                 &side,
@@ -338,9 +355,20 @@ pub fn order_create(
         } else {
             Default::default()
         },
-        s.trigger_by.clone(),
+        if price_trigger.is_some() {
+            Some(s.trigger_by.clone())
+        } else {
+            None
+        },
         price_trigger,
-        trigger_direction(price_is_real_time, price_trigger),
+        if price_trigger.is_some() {
+            Some(trigger_direction(
+                price_is_real_time,
+                price_trigger.unwrap_or_default(),
+            ))
+        } else {
+            None
+        },
         is_reduce,
         Uuid::new_v4().to_string(),
         position_idx,
@@ -361,8 +389,8 @@ pub fn orders_market_extern<'a>(
             &s,
             &cell,
             &symbol,
-            0.,
-            0.,
+            None,
+            None,
             &signals_ready_series[market_entry.as_str()],
             buffer.last().unwrap(),
             "market",
@@ -374,8 +402,8 @@ pub fn orders_market_extern<'a>(
             &s,
             &cell,
             &symbol,
-            0.,
-            0.,
+            None,
+            None,
             &signals_ready_series[market_exit.as_str()],
             buffer.last().unwrap(),
             "market",
@@ -398,8 +426,8 @@ pub fn orders_limit_extern<'a>(
             &s,
             &cell,
             &symbol,
-            indications_series[limit_entry.1.as_str()],
-            0.,
+            Some(indications_series[limit_entry.1.as_str()]),
+            None,
             &signals_ready_series[limit_entry.0.as_str()],
             buffer.last().unwrap(),
             "limit",
@@ -411,8 +439,8 @@ pub fn orders_limit_extern<'a>(
             &s,
             &cell,
             &symbol,
-            indications_series[limit_exit.1.as_str()],
-            0.,
+            Some(indications_series[limit_exit.1.as_str()]),
+            None,
             &signals_ready_series[limit_exit.0.as_str()],
             buffer.last().unwrap(),
             "limit",
@@ -435,8 +463,8 @@ pub fn orders_trigger_extern<'a>(
             &s,
             &cell,
             &symbol,
-            0.,
-            indications_series[trigger_market_entry.1.as_str()],
+            None,
+            Some(indications_series[trigger_market_entry.1.as_str()]),
             &signals_ready_series[trigger_market_entry.0.as_str()],
             buffer.last().unwrap(),
             "market",
@@ -448,8 +476,8 @@ pub fn orders_trigger_extern<'a>(
             &s,
             &cell,
             &symbol,
-            0.,
-            indications_series[trigger_market_exit.1.as_str()],
+            None,
+            Some(indications_series[trigger_market_exit.1.as_str()]),
             &signals_ready_series[trigger_market_exit.0.as_str()],
             buffer.last().unwrap(),
             "market",
@@ -461,8 +489,8 @@ pub fn orders_trigger_extern<'a>(
             &s,
             &cell,
             &symbol,
-            indications_series[trigger_limit_entry.1.as_str()],
-            indications_series[trigger_limit_entry.2.as_str()],
+            Some(indications_series[trigger_limit_entry.1.as_str()]),
+            Some(indications_series[trigger_limit_entry.2.as_str()]),
             &signals_ready_series[trigger_limit_entry.0.as_str()],
             buffer.last().unwrap(),
             "limit",
@@ -474,8 +502,8 @@ pub fn orders_trigger_extern<'a>(
             &s,
             &cell,
             &symbol,
-            indications_series[trigger_limit_exit.1.as_str()],
-            indications_series[trigger_limit_exit.2.as_str()],
+            Some(indications_series[trigger_limit_exit.1.as_str()]),
+            Some(indications_series[trigger_limit_exit.2.as_str()]),
             &signals_ready_series[trigger_limit_exit.0.as_str()],
             buffer.last().unwrap(),
             "limit",

@@ -118,7 +118,7 @@ pub fn check_addition_flags(
             file_wr.src_write(&src)?;
         }
         if addition_flags.clear {
-            file_wr.backtests_del();
+            file_wr.backtests_del()?;
         }
     }
     Ok(())

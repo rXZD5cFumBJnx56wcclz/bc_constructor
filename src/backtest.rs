@@ -21,7 +21,7 @@ use crate::{
     settings::{check_addition_args, check_addition_flags},
     trade::{
         statistics::StatCollector,
-        trade_data_collector::{AfterTradeData, TradeData},
+        trade_data::{AfterTradeData, TradeData},
     },
 };
 

@@ -11,6 +11,7 @@ use bc_utils_lg::structs::settings::{
     SETTINGS_IND, SETTINGS_INDS, SETTINGS_SIGNAL, SETTINGS_SIGNALS, SETTINGS_USED_SRC,
 };
 use bc_utils_lg::types::maps::MAP;
+use pretty_assertions::assert_eq as assert_eq_pr;
 
 use bc_constructor::indicators::*;
 use bc_constructor::signals_train::*;
@@ -26,7 +27,7 @@ fn signals_from_settings_without_bf_res_1() {
     let res_1 = res.get("mm_1").unwrap().as_ref();
     let rsi_test_1 = MM::default();
     let rsi_test_2 = (res_1 as &dyn Any).downcast_ref::<MM>().unwrap();
-    assert_eq!(&rsi_test_1, rsi_test_2);
+    assert_eq_pr!(&rsi_test_1, rsi_test_2);
 }
 
 #[test]
@@ -93,7 +94,7 @@ fn signals_train_res_1() {
             .collect::<Vec<Vec<f64>>>(),
         &vec![],
     );
-    assert_eq!(res_1, res_2);
+    assert_eq_pr!(res_1, res_2);
 }
 
 #[test]
@@ -158,7 +159,7 @@ fn signals_train_vec_res_1() {
             .collect::<Vec<Vec<f64>>>(),
         &vec![],
     );
-    assert_eq!(
+    assert_eq_pr!(
         res_1.iter().filter(|v| !v.is_nan()).collect::<Vec<&f64>>(),
         res_2.iter().filter(|v| !v.is_nan()).collect::<Vec<&f64>>()
     );

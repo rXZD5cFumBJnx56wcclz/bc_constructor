@@ -23,17 +23,21 @@ async fn main() {
     if let Some(commands) = commands {
         match commands {
             Commands::Run => {}
-            Commands::Backtest => backtest_multi(
-                &s,
-                &FA_I(),
-                &FA_S(),
-                &FA_T(),
-                &FA_O(),
-                &cli.addition_flugs,
-                &cli.addition_args,
-            )
-            .await
-            .unwrap(),
+            Commands::Backtest => {
+                dbg!(
+                    backtest_multi(
+                        &s,
+                        &FA_I(),
+                        &FA_S(),
+                        &FA_T(),
+                        &FA_O(),
+                        &cli.addition_flugs,
+                        &cli.addition_args,
+                    )
+                    .await
+                    .unwrap_err()
+                );
+            }
             Commands::Update => {}
             Commands::Bench => {}
         }
