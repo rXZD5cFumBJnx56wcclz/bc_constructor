@@ -30,6 +30,7 @@ impl StepCell for TradeCell {
         self.src = src.to_vec();
         self.src_l = src_l.to_vec();
         for order in orders {
+            // recursive iteration is not required, as no such orders will be created
             for sl in order.sl.iter().cloned() {
                 self.trigger_orders
                     .borrow_mut()
@@ -71,5 +72,21 @@ impl StepCell for TradeCell {
         self.trigger_orders.borrow_mut().retain(|_, v| v.is_active);
         self.limit_orders.borrow_mut().retain(|_, v| v.is_active);
         self.positions.borrow_mut().retain(|_, v| v.is_active);
+    }
+}
+
+pub trait IsActive {
+    fn is_active(&self) -> bool;
+}
+
+impl IsActive for Position {
+    fn is_active(&self) -> bool {
+        self.is_active
+    }
+}
+
+impl IsActive for Order {
+    fn is_active(&self) -> bool {
+        self.is_active
     }
 }

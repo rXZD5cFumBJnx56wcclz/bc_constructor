@@ -1,11 +1,13 @@
 use std::cell::Ref;
 use std::ops::Deref;
 
-use bc_utils_lg::structs::trade::TradeCell;
+use bc_utils::other::transpose;
+use bc_utils_lg::structs::trade::{Position, TradeCell};
 use bc_utils_lg::types::maps::MAP;
 use bc_utils_lg::{structs::settings::SETTINGS_TRADE, types::maps::MAP_LINK};
 use num_traits::Float;
 
+use crate::trade::structs::IsActive;
 use crate::trade::utils_cell::{price_is_real_time, qty_pnl};
 
 #[derive(Debug)]
@@ -53,11 +55,11 @@ impl StatCollector<'_> {
             .collect()
     }
     pub fn to_any(values: &[Vec<f64>]) -> Vec<f64> {
-        let first = values.first().unwrap();
-        (0..first.len())
+        (0..values.first().unwrap().len())
             .map(|i| {
-                if values.iter().any(|v| v[i].is_normal()) {
-                    first[i]
+                let bind = values.iter().map(|v| v[i]).find(|v| v.is_normal());
+                if let Some(el) = bind {
+                    el
                 } else {
                     f64::NAN
                 }
@@ -67,11 +69,23 @@ impl StatCollector<'_> {
     pub fn to_some<T>(
         &self,
         func: fn(&TradeCell) -> Ref<MAP<String, T>>,
-    ) -> Vec<f64> {
+        include_inactive: bool,
+    ) -> Vec<f64>
+    where
+        T: IsActive,
+    {
+        let f = |v: Ref<MAP<String, T>>| {
+            if include_inactive {
+                v.values().any(|v| v.is_active())
+            } else {
+                !v.is_empty()
+            }
+        };
         self.cells
             .iter()
             .map(|c| {
-                if !func(c).is_empty() {
+                if f(func(c)) {
+                    // stat used open prices
                     c.src[1]
                 } else {
                     f64::NAN
@@ -104,7 +118,7 @@ impl StatCollector<'_> {
     pub fn to_entry(&self) -> Vec<f64> {
         StatCollector::to_all(&[
             StatCollector::to_any(&[
-                self.to_some(|c| c.market_orders.borrow()),
+                self.to_some(|c| c.market_orders.borrow(), true),
                 self.into_iter()
                     .map(|c| {
                         if c.limit_orders
@@ -119,15 +133,13 @@ impl StatCollector<'_> {
                     })
                     .collect(),
             ]),
-            self.to_some(|c| c.positions.borrow()),
+            self.to_some(|c| c.positions.borrow(), true),
         ])
     }
     pub fn to_exit(&self) -> Vec<f64> {
         self.into_iter()
             .map(|c| {
-                if !c.positions.borrow().is_empty()
-                    && c.positions.borrow().values().next().unwrap().is_active == false
-                {
+                if c.positions.borrow().values().any(|v| !v.is_active) {
                     c.src[0]
                 } else {
                     f64::NAN
@@ -136,26 +148,47 @@ impl StatCollector<'_> {
             .collect()
     }
     pub fn to_market_orders(&self) -> Vec<f64> {
-        self.to_some(|c| c.market_orders.borrow())
+        self.to_some(|c| c.market_orders.borrow(), true)
     }
     pub fn to_limit_orders(&self) -> Vec<f64> {
-        self.to_some(|c| c.limit_orders.borrow())
+        self.to_some(|c| c.limit_orders.borrow(), true)
     }
     pub fn to_entry_and_exit(&self) -> Vec<f64> {
         self.to_entry()
             .into_iter()
             .zip(self.to_exit().into_iter())
             .map(|(v1, v2)| {
-                if v1.is_normal() && v2.is_normal() {
-                    v1
+                let bind = [v1, v2].into_iter().find(|v| v.is_normal());
+                if let Some(v) = bind {
+                    v
                 } else {
                     f64::NAN
                 }
             })
             .collect()
     }
-    pub fn to_positions_orders(&self) -> Vec<f64> {
-        StatCollector::to_all(&[self.to_some(|v| v.positions.borrow()), self.to_entry_and_exit()])
+    pub fn to_positions_entry_exit(&self) -> Vec<f64> {
+        StatCollector::to_all(&[
+            self.to_some(|v| v.positions.borrow(), false),
+            self.to_entry_and_exit(),
+        ])
+    }
+    pub fn to_value_positions(
+        &self,
+        func: fn(&Position) -> f64,
+    ) -> Vec<f64> {
+        StatCollector::to_all(&[
+            self.into_iter()
+                .map(|c| {
+                    if !c.positions.borrow().is_empty() {
+                        func(&c.positions.borrow().values().next().unwrap())
+                    } else {
+                        f64::NAN
+                    }
+                })
+                .collect(),
+            self.to_entry_and_exit(),
+        ])
     }
     pub fn to_data(&self) -> StatData {
         StatData(vec![
@@ -195,41 +228,29 @@ impl StatCollector<'_> {
                 ("exit".to_string(), self.to_exit()),
                 (
                     "pnl".to_string(),
-                    StatCollector::to_all(&[self.to_exit(), self.to_pnl()]),
+                    StatCollector::to_all(&[self.to_pnl(), self.to_exit()]),
                 ),
-                (
-                    "qty".to_string(),
-                    StatCollector::to_all(&[
-                        self.into_iter()
-                            .map(|c| {
-                                if !c.positions.borrow().is_empty() {
-                                    c.positions.borrow().values().next().unwrap().qty
-                                } else {
-                                    f64::NAN
-                                }
-                            })
-                            .collect(),
-                        self.to_entry_and_exit(),
-                    ]),
-                ),
+                ("qty".to_string(), self.to_value_positions(|v| v.qty)),
             ]),
             {
-                let mut bind = self
-                    .to_positions_orders()
-                    .into_iter()
-                    .del_nan(1)
-                    .map(|(time, pos)| vec![time as f64, pos])
-                    .collect::<Vec<Vec<f64>>>();
+                let mut bind = transpose(
+                    self.to_positions_entry_exit()
+                        .into_iter()
+                        .del_nan(1)
+                        .map(|(time, pos)| vec![time as f64, pos])
+                        .collect::<Vec<Vec<f64>>>(),
+                );
                 MAP_LINK::from_iter([
                     ("time".to_string(), bind.remove(0)),
-                    ("positions_orders".to_string(), bind.remove(0)),
+                    ("positions_entry_exit".to_string(), bind.remove(0)),
                 ])
             },
         ])
     }
 }
 
-pub struct StatData(Vec<MAP_LINK<String, Vec<f64>>>);
+#[derive(PartialEq, Debug, Default)]
+pub struct StatData(pub Vec<MAP_LINK<String, Vec<f64>>>);
 
 impl StatData {
     pub fn to_vec(&self) -> Vec<Vec<Vec<f64>>> {

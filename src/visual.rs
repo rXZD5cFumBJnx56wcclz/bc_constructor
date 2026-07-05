@@ -8,7 +8,7 @@ pub const BT_SCRIPT: fn(&str) -> String = |symbol| {
     set style textbox opaque fillcolor rgb "#EBEBEB" bordercolor rgb "#0F0F0F"
     plot \
     "data.dat" index 0 using "time":"open":"high":"low":"close" with candlesticks linecolor rgb "#7D2AD4" title "{symbol}", \
-    "data.dat" index 1 using "time":"positions_orders" with lines linewidth 2 dashtype (40,10) linecolor rgb "#C2820C" title "positions_orders", \
+    "data.dat" index 1 using "time":"positions_entry_exit" with lines linewidth 2 dashtype (40,10) linecolor rgb "#C2820C" title "positions_entry_exit", \
     "data.dat" index 0 using "time":"entry" with points pointtype 7 pointsize 3 linecolor rgb "#0F0F0F" notitle, \
     "data.dat" index 0 using "time":"exit" with points lw 8 pointtype 2 pointsize 2 linecolor rgb "#0F0F0F" notitle, \
     "data.dat" index 0 using "time":"entry" with points pointtype 7 pointsize 2.5 linecolor rgb "#FFFFFF" notitle, \
