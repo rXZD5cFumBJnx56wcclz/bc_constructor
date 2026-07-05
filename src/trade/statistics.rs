@@ -1,4 +1,3 @@
-use core::f64;
 use std::cell::Ref;
 use std::ops::Deref;
 
@@ -37,24 +36,6 @@ impl<'a> IntoIterator for &'a StatCollector<'a> {
 
     fn into_iter(self) -> Self::IntoIter {
         (&self.cells).into_iter()
-    }
-}
-
-pub struct StatData(Vec<MAP_LINK<String, Vec<f64>>>);
-
-impl StatData {
-    pub fn to_vec(&self) -> Vec<Vec<Vec<f64>>> {
-        self.0
-            .iter()
-            .map(|v| v.iter().map(|v| v.1.clone()).collect::<Vec<Vec<f64>>>())
-            .collect::<Vec<Vec<Vec<f64>>>>()
-    }
-}
-
-impl Deref for StatData {
-    type Target = Vec<MAP_LINK<String, Vec<f64>>>;
-    fn deref(&self) -> &Self::Target {
-        &self.0
     }
 }
 
@@ -245,6 +226,24 @@ impl StatCollector<'_> {
                 ])
             },
         ])
+    }
+}
+
+pub struct StatData(Vec<MAP_LINK<String, Vec<f64>>>);
+
+impl StatData {
+    pub fn to_vec(&self) -> Vec<Vec<Vec<f64>>> {
+        self.0
+            .iter()
+            .map(|v| v.iter().map(|v| v.1.clone()).collect::<Vec<Vec<f64>>>())
+            .collect::<Vec<Vec<Vec<f64>>>>()
+    }
+}
+
+impl Deref for StatData {
+    type Target = Vec<MAP_LINK<String, Vec<f64>>>;
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 

@@ -277,49 +277,198 @@ fn orders_market_extern_res_1() {
     )
 }
 
-// #[test]
-// fn orders_limit_extern_res_1() {
-//     assert_eq_pr!(
-//         {
-//             let mut vec = vec![];
-//             orders_limit_extern(
-//                 &mut vec,
-//                 &S,
-//                 &TradeCell::new(100., SRC_EL_L.to_vec(), SRC_EL_L1.to_vec()),
-//                 "",
-//                 &MAP::from_iter([("th_1", Signal::new(1., 1.))]),
-//                 &SRC,
-//             );
-//             for o in vec.iter_mut() {
-//                 set_order_link_id(o);
-//             }
-//             vec
-//         },
-//         vec![Order::new(
-//             "".to_string(),
-//             "buy".to_string(),
-//             Signal::new(1., 1.),
-//             100. * S.percent_of_capital,
-//             0.,
-//             S.leverage,
-//             None,
-//             "market".to_string(),
-//             Default::default(),
-//             {
-//                 let mut bind =
-//                     tp_sl_orders("sl", &S.stoploss, &S, "", "buy", SRC_EL[1], &SIGNAL, "1", 2);
-//                 for o in bind.iter_mut() {
-//                     set_order_link_id(o);
-//                 }
-//                 bind
-//             },
-//             None,
-//             None,
-//             None,
-//             false,
-//             "".to_string(),
-//             "1".to_string(),
-//             true
-//         )]
-//     )
-// }
+#[test]
+fn orders_limit_extern_res_1() {
+    assert_eq_pr!(
+        {
+            let mut vec = vec![];
+            orders_limit_extern(
+                &mut vec,
+                &S,
+                &TradeCell::new(100., SRC_EL_L.to_vec(), SRC_EL_L1.to_vec()),
+                "",
+                &MAP::from_iter([("rsi_1", 0.9)]),
+                &MAP::from_iter([("th_1", Signal::new(1., 1.))]),
+                &SRC,
+            );
+            for o in vec.iter_mut() {
+                set_order_link_id(o);
+            }
+            vec
+        },
+        vec![Order::new(
+            "".to_string(),
+            "buy".to_string(),
+            Signal::new(1., 1.),
+            100. * S.percent_of_capital,
+            0.,
+            S.leverage,
+            Some(0.9),
+            "limit".to_string(),
+            Default::default(),
+            {
+                let mut bind =
+                    tp_sl_orders("sl", &S.stoploss, &S, "", "buy", SRC_EL[1], &SIGNAL, "1", 2);
+                for o in bind.iter_mut() {
+                    set_order_link_id(o);
+                }
+                bind
+            },
+            None,
+            None,
+            None,
+            false,
+            "".to_string(),
+            "1".to_string(),
+            true
+        )]
+    )
+}
+
+#[test]
+fn orders_trigger_extern_res_1() {
+    assert_eq_pr!(
+        {
+            let mut vec = vec![];
+            orders_trigger_extern(
+                &mut vec,
+                &S,
+                &TradeCell::new(100., SRC_EL_L.to_vec(), SRC_EL_L1.to_vec()),
+                "",
+                &MAP::from_iter([("rsi_1", 0.9), ("rsi_2", 0.95)]),
+                &MAP::from_iter([("th_1", Signal::new(1., 1.))]),
+                &SRC,
+            );
+            for o in vec.iter_mut() {
+                set_order_link_id(o);
+            }
+            vec
+        },
+        vec![Order::new(
+            "".to_string(),
+            "buy".to_string(),
+            Signal::new(1., 1.),
+            100. * S.percent_of_capital,
+            0.,
+            S.leverage,
+            Some(0.9),
+            "limit".to_string(),
+            Default::default(),
+            {
+                let mut bind =
+                    tp_sl_orders("sl", &S.stoploss, &S, "", "buy", SRC_EL[1], &SIGNAL, "1", 2);
+                for o in bind.iter_mut() {
+                    set_order_link_id(o);
+                }
+                bind
+            },
+            Some(S.trigger_by.clone()),
+            Some(0.95),
+            Some(2),
+            false,
+            "".to_string(),
+            "1".to_string(),
+            true
+        )]
+    )
+}
+
+#[test]
+fn orders_create_res_1() {
+    assert_eq_pr!(
+        {
+            let mut vec = orders_create(
+                &S,
+                &TradeCell::new(100., SRC_EL_L.to_vec(), SRC_EL_L1.to_vec()),
+                "",
+                &MAP::from_iter([("rsi_1", 0.9), ("rsi_2", 0.95)]),
+                &MAP::from_iter([("th_1", Signal::new(1., 1.))]),
+                &SRC,
+            );
+            for o in vec.iter_mut() {
+                set_order_link_id(o);
+            }
+            vec
+        },
+        vec![
+            Order::new(
+                "".to_string(),
+                "buy".to_string(),
+                Signal::new(1., 1.),
+                100. * S.percent_of_capital,
+                0.,
+                S.leverage,
+                None,
+                "market".to_string(),
+                Default::default(),
+                {
+                    let mut bind =
+                        tp_sl_orders("sl", &S.stoploss, &S, "", "buy", SRC_EL[1], &SIGNAL, "1", 2);
+                    for o in bind.iter_mut() {
+                        set_order_link_id(o);
+                    }
+                    bind
+                },
+                None,
+                None,
+                None,
+                false,
+                "".to_string(),
+                "1".to_string(),
+                true
+            ),
+            Order::new(
+                "".to_string(),
+                "buy".to_string(),
+                Signal::new(1., 1.),
+                100. * S.percent_of_capital,
+                0.,
+                S.leverage,
+                Some(0.9),
+                "limit".to_string(),
+                Default::default(),
+                {
+                    let mut bind =
+                        tp_sl_orders("sl", &S.stoploss, &S, "", "buy", SRC_EL[1], &SIGNAL, "1", 2);
+                    for o in bind.iter_mut() {
+                        set_order_link_id(o);
+                    }
+                    bind
+                },
+                None,
+                None,
+                None,
+                false,
+                "".to_string(),
+                "1".to_string(),
+                true
+            ),
+            Order::new(
+                "".to_string(),
+                "buy".to_string(),
+                Signal::new(1., 1.),
+                100. * S.percent_of_capital,
+                0.,
+                S.leverage,
+                Some(0.9),
+                "limit".to_string(),
+                Default::default(),
+                {
+                    let mut bind =
+                        tp_sl_orders("sl", &S.stoploss, &S, "", "buy", SRC_EL[1], &SIGNAL, "1", 2);
+                    for o in bind.iter_mut() {
+                        set_order_link_id(o);
+                    }
+                    bind
+                },
+                Some(S.trigger_by.clone()),
+                Some(0.95),
+                Some(2),
+                false,
+                "".to_string(),
+                "1".to_string(),
+                true
+            )
+        ]
+    )
+}

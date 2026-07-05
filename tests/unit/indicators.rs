@@ -2,7 +2,7 @@ use std::any::Any;
 
 use bc_indicators::ready_imports::Indicator;
 use bc_indicators::{rma::RMA, rsi::RSI};
-use bc_utils::nums::{coll_nz, round_f};
+use bc_utils::nums::{nz_coll, round_f};
 use bc_utils_lg::statics::prices::{CLOSE, OPEN, OPEN_LAST, SRC_NOMAP, SRC_TRANSPOSE};
 use bc_utils_lg::types::maps::MAP;
 use pretty_assertions::assert_eq as assert_eq_pr;
@@ -136,7 +136,7 @@ fn indications_vec_res_1() {
     let res_1 = indicators_gw.indications_vec(&SRC_TRANSPOSE)["rsi_1"].clone();
     let res_2 = RSI::new(2).ind_vec(&SRC_NOMAP);
     assert_eq_pr!(
-        coll_nz::<Vec<f64>, _, _>(&res_1, 0.0),
-        coll_nz::<Vec<f64>, _, _>(&res_2, 0.0)
+        nz_coll::<Vec<f64>, _, _>(&res_1, 0.0),
+        nz_coll::<Vec<f64>, _, _>(&res_2, 0.0)
     );
 }

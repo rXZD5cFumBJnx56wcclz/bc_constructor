@@ -28,6 +28,12 @@ pub static S: LazyLock<SETTINGS_TRADE> = LazyLock::new(|| SETTINGS_TRADE {
         ..Default::default()
     }],
     market_entry_orders_signals: vec!["th_1".to_string()],
+    limit_entry_orders_signals: vec![("th_1".to_string(), "rsi_1".to_string())],
+    trigger_limit_entry_orders_signals: vec![(
+        "th_1".to_string(),
+        "rsi_1".to_string(),
+        "rsi_2".to_string(),
+    )],
     ..Default::default()
 });
 
