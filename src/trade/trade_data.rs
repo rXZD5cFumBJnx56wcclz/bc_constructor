@@ -133,7 +133,7 @@ impl<'a> TradeData<'a> {
         res
     }
     pub fn update(
-        self: Pin<&Self>,
+        self: &Pin<Box<Self>>,
         buffer: &[Vec<f64>],
         stat_collector: Option<&mut StatCollector<'a>>,
     ) {
@@ -153,7 +153,7 @@ impl<'a> TradeData<'a> {
             &buffer[buffer.len() - 2],
             orders,
             &self.as_ref().get_ref().s.trade,
-            &self.get_ref().orders_collectors_gateway,
+            &self.as_ref().get_ref().orders_collectors_gateway,
             stat_collector,
         );
     }

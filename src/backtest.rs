@@ -54,9 +54,7 @@ pub async fn backtest(
         fa_orders_collectors,
     );
     for i in w_max..buffer.len() {
-        trade_data
-            .as_ref()
-            .update(&buffer[i - w_max..i], Some(&mut stat_collector));
+        trade_data.update(&buffer[i - w_max..i], Some(&mut stat_collector));
     }
     let stat_collector_data = stat_collector.to_data();
     let stat_collector_data_vec = stat_collector_data.to_vec();

@@ -2,14 +2,14 @@ use crate::unit::trade::prelude::*;
 
 #[test]
 fn qty_and_commision_res_1() {
-    let qty = S.capital * S.percent_of_capital;
+    let qty = S.trade.capital * S.trade.percent_of_capital;
     assert_eq_pr!(
-        (qty, qty * S.commission_market * S.leverage),
-        qty_and_commission(&S, S.capital, &SIGNAL, "market", 0., 0.),
+        (qty, qty * S.trade.commission_market * S.trade.leverage),
+        qty_and_commission(&S.trade, S.trade.capital, &SIGNAL, "market", 0., 0.),
     );
     assert_eq_pr!(
-        (qty, qty * S.commission_limit * S.leverage),
-        qty_and_commission(&S, S.capital, &SIGNAL, "limit", 0., 0.),
+        (qty, qty * S.trade.commission_limit * S.trade.leverage),
+        qty_and_commission(&S.trade, S.trade.capital, &SIGNAL, "limit", 0., 0.),
     );
 }
 
@@ -23,12 +23,12 @@ fn price_in_real_time_res_1() {
 #[test]
 fn price_with_type_res_1() {
     let src = &[1., 1., 2., 2., 3.];
-    assert_eq_pr!(src[1], price_with_type(&*S, src, "last"));
+    assert_eq_pr!(src[1], price_with_type(&S.trade, src, "last"));
 }
 
 #[test]
 fn position_idx_res_1() {
-    assert_eq_pr!("1".to_string(), position_idx(&S, &SIGNAL),);
+    assert_eq_pr!("1".to_string(), position_idx(&S.trade, &SIGNAL),);
 }
 
 #[test]
@@ -38,27 +38,27 @@ fn price_crossed_res_1() {
 
 #[test]
 fn qty_pnl_res_1() {
-    assert_eq_pr!(qty_pnl(S.leverage, 10., 2., 3., "1"), 50.);
+    assert_eq_pr!(qty_pnl(S.trade.leverage, 10., 2., 3., "1"), 50.);
 }
 
 #[test]
 fn modify_positions_res_1() {
     let price = SRC_EL[1];
-    let mut res = TradeCell::new(S.capital, SRC_EL.to_vec(), SRC_EL_L.to_vec());
-    let (qty, commission) = qty_and_commission(&S, res.capital, &SIGNAL, "market", 0., 0.);
+    let mut res = TradeCell::new(S.trade.capital, SRC_EL.to_vec(), SRC_EL_L.to_vec());
+    let (qty, commission) = qty_and_commission(&S.trade, res.capital, &SIGNAL, "market", 0., 0.);
     res.push_position(Position::new(
         "".to_string(),
         "buy".to_string(),
         qty,
-        S.leverage,
+        S.trade.leverage,
         price,
         "1".to_string(),
         true,
     ));
     res.capital -= qty + commission;
-    let mut cell = TradeCell::new(S.capital, SRC_EL.to_vec(), SRC_EL_L.to_vec());
+    let mut cell = TradeCell::new(S.trade.capital, SRC_EL.to_vec(), SRC_EL_L.to_vec());
     modify_positions(
-        &S,
+        &S.trade,
         &mut cell,
         &Order::new(
             "".to_string(),
@@ -66,7 +66,7 @@ fn modify_positions_res_1() {
             *SIGNAL,
             qty,
             0.,
-            S.leverage,
+            S.trade.leverage,
             None,
             "market".to_string(),
             Default::default(),
@@ -85,23 +85,23 @@ fn modify_positions_res_1() {
 
 #[test]
 fn modify_positions_or_not_res_1() {
-    let mut res = TradeCell::new(S.capital, SRC_EL.to_vec(), SRC_EL_L.to_vec());
-    let (qty, commission) = qty_and_commission(&S, res.capital, &SIGNAL, "market", 0., 0.);
-    let (_, commission_limit) = qty_and_commission(&S, res.capital, &SIGNAL, "limit", 0., 0.);
+    let mut res = TradeCell::new(S.trade.capital, SRC_EL.to_vec(), SRC_EL_L.to_vec());
+    let (qty, commission) = qty_and_commission(&S.trade, res.capital, &SIGNAL, "market", 0., 0.);
+    let (_, commission_limit) = qty_and_commission(&S.trade, res.capital, &SIGNAL, "limit", 0., 0.);
     let price = SRC_EL[1];
     res.push_position(Position::new(
         "".to_string(),
         "buy".to_string(),
         qty * 2.,
-        S.leverage,
+        S.trade.leverage,
         price,
         "1".to_string(),
         true,
     ));
     res.capital -= qty * 2. + commission + commission_limit;
-    let mut cell = TradeCell::new(S.capital, SRC_EL.to_vec(), SRC_EL_L.to_vec());
+    let mut cell = TradeCell::new(S.trade.capital, SRC_EL.to_vec(), SRC_EL_L.to_vec());
     modify_positions(
-        &S,
+        &S.trade,
         &mut cell,
         &Order::new(
             "".to_string(),
@@ -109,7 +109,7 @@ fn modify_positions_or_not_res_1() {
             *SIGNAL,
             qty,
             0.,
-            S.leverage,
+            S.trade.leverage,
             None,
             "market".to_string(),
             Default::default(),
@@ -124,7 +124,7 @@ fn modify_positions_or_not_res_1() {
         ),
     );
     modify_positions_or_not(
-        &S,
+        &S.trade,
         &mut cell,
         &Order::new(
             "".to_string(),
@@ -132,7 +132,7 @@ fn modify_positions_or_not_res_1() {
             *SIGNAL,
             qty,
             0.,
-            S.leverage,
+            S.trade.leverage,
             Some(price),
             "limit".to_string(),
             Default::default(),
@@ -158,7 +158,17 @@ fn trigger_direction_res_1() {
 fn tp_sl_orders_res_1() {
     assert_eq_pr!(
         {
-            let mut bind = tp_sl_orders("sl", &S.stoploss, &S, "", "buy", 1.1, &SIGNAL, "1", 2);
+            let mut bind = tp_sl_orders(
+                "sl",
+                &S.trade.stoploss,
+                &S.trade,
+                "",
+                "buy",
+                1.1,
+                &SIGNAL,
+                "1",
+                2,
+            );
             for o in &mut bind {
                 set_order_link_id(o);
             }
@@ -170,7 +180,7 @@ fn tp_sl_orders_res_1() {
             *SIGNAL,
             0.,
             1.0,
-            S.leverage,
+            S.trade.leverage,
             None,
             "market".to_string(),
             Default::default(),
@@ -191,7 +201,7 @@ fn order_create_res_1() {
     assert_eq_pr!(
         {
             let mut bind = order_create(
-                &S,
+                &S.trade,
                 &TradeCell::new(100., SRC_EL_L.to_vec(), SRC_EL_L1.to_vec()),
                 "",
                 Some(1.7),
@@ -209,14 +219,24 @@ fn order_create_res_1() {
                 "".to_string(),
                 "buy".to_string(),
                 *SIGNAL,
-                S.amount_of_capital + S.percent_of_capital * 100.,
+                S.trade.amount_of_capital + S.trade.percent_of_capital * 100.,
                 0.,
-                S.leverage,
+                S.trade.leverage,
                 Some(1.7),
                 "limit".to_string(),
                 Default::default(),
-                tp_sl_orders("sl", &S.stoploss, &S, "", "buy", SRC_EL[1], &SIGNAL, "1", 2),
-                Some(S.trigger_by.clone()),
+                tp_sl_orders(
+                    "sl",
+                    &S.trade.stoploss,
+                    &S.trade,
+                    "",
+                    "buy",
+                    SRC_EL[1],
+                    &SIGNAL,
+                    "1",
+                    2,
+                ),
+                Some(S.trade.trigger_by.clone()),
                 Some(1.75),
                 Some(2),
                 false,
@@ -237,7 +257,7 @@ fn orders_market_extern_res_1() {
             let mut vec = vec![];
             orders_market_extern(
                 &mut vec,
-                &S,
+                &S.trade,
                 &TradeCell::new(100., SRC_EL_L.to_vec(), SRC_EL_L1.to_vec()),
                 "",
                 &MAP::from_iter([("th_1", Signal::new(1., 1.))]),
@@ -252,15 +272,24 @@ fn orders_market_extern_res_1() {
             "".to_string(),
             "buy".to_string(),
             Signal::new(1., 1.),
-            100. * S.percent_of_capital,
+            100. * S.trade.percent_of_capital,
             0.,
-            S.leverage,
+            S.trade.leverage,
             None,
             "market".to_string(),
             Default::default(),
             {
-                let mut bind =
-                    tp_sl_orders("sl", &S.stoploss, &S, "", "buy", SRC_EL[1], &SIGNAL, "1", 2);
+                let mut bind = tp_sl_orders(
+                    "sl",
+                    &S.trade.stoploss,
+                    &S.trade,
+                    "",
+                    "buy",
+                    SRC_EL[1],
+                    &SIGNAL,
+                    "1",
+                    2,
+                );
                 for o in bind.iter_mut() {
                     set_order_link_id(o);
                 }
@@ -284,7 +313,7 @@ fn orders_limit_extern_res_1() {
             let mut vec = vec![];
             orders_limit_extern(
                 &mut vec,
-                &S,
+                &S.trade,
                 &TradeCell::new(100., SRC_EL_L.to_vec(), SRC_EL_L1.to_vec()),
                 "",
                 &MAP::from_iter([("rsi_1", 0.9)]),
@@ -300,15 +329,24 @@ fn orders_limit_extern_res_1() {
             "".to_string(),
             "buy".to_string(),
             Signal::new(1., 1.),
-            100. * S.percent_of_capital,
+            100. * S.trade.percent_of_capital,
             0.,
-            S.leverage,
+            S.trade.leverage,
             Some(0.9),
             "limit".to_string(),
             Default::default(),
             {
-                let mut bind =
-                    tp_sl_orders("sl", &S.stoploss, &S, "", "buy", SRC_EL[1], &SIGNAL, "1", 2);
+                let mut bind = tp_sl_orders(
+                    "sl",
+                    &S.trade.stoploss,
+                    &S.trade,
+                    "",
+                    "buy",
+                    SRC_EL[1],
+                    &SIGNAL,
+                    "1",
+                    2,
+                );
                 for o in bind.iter_mut() {
                     set_order_link_id(o);
                 }
@@ -332,7 +370,7 @@ fn orders_trigger_extern_res_1() {
             let mut vec = vec![];
             orders_trigger_extern(
                 &mut vec,
-                &S,
+                &S.trade,
                 &TradeCell::new(100., SRC_EL_L.to_vec(), SRC_EL_L1.to_vec()),
                 "",
                 &MAP::from_iter([("rsi_1", 0.9), ("rsi_2", 0.95)]),
@@ -348,21 +386,30 @@ fn orders_trigger_extern_res_1() {
             "".to_string(),
             "buy".to_string(),
             Signal::new(1., 1.),
-            100. * S.percent_of_capital,
+            100. * S.trade.percent_of_capital,
             0.,
-            S.leverage,
+            S.trade.leverage,
             Some(0.9),
             "limit".to_string(),
             Default::default(),
             {
-                let mut bind =
-                    tp_sl_orders("sl", &S.stoploss, &S, "", "buy", SRC_EL[1], &SIGNAL, "1", 2);
+                let mut bind = tp_sl_orders(
+                    "sl",
+                    &S.trade.stoploss,
+                    &S.trade,
+                    "",
+                    "buy",
+                    SRC_EL[1],
+                    &SIGNAL,
+                    "1",
+                    2,
+                );
                 for o in bind.iter_mut() {
                     set_order_link_id(o);
                 }
                 bind
             },
-            Some(S.trigger_by.clone()),
+            Some(S.trade.trigger_by.clone()),
             Some(0.95),
             Some(2),
             false,
@@ -378,7 +425,7 @@ fn orders_create_res_1() {
     assert_eq_pr!(
         {
             let mut vec = orders_create(
-                &S,
+                &S.trade,
                 &TradeCell::new(100., SRC_EL_L.to_vec(), SRC_EL_L1.to_vec()),
                 "",
                 &MAP::from_iter([("rsi_1", 0.9), ("rsi_2", 0.95)]),
@@ -395,15 +442,24 @@ fn orders_create_res_1() {
                 "".to_string(),
                 "buy".to_string(),
                 Signal::new(1., 1.),
-                100. * S.percent_of_capital,
+                100. * S.trade.percent_of_capital,
                 0.,
-                S.leverage,
+                S.trade.leverage,
                 None,
                 "market".to_string(),
                 Default::default(),
                 {
-                    let mut bind =
-                        tp_sl_orders("sl", &S.stoploss, &S, "", "buy", SRC_EL[1], &SIGNAL, "1", 2);
+                    let mut bind = tp_sl_orders(
+                        "sl",
+                        &S.trade.stoploss,
+                        &S.trade,
+                        "",
+                        "buy",
+                        SRC_EL[1],
+                        &SIGNAL,
+                        "1",
+                        2,
+                    );
                     for o in bind.iter_mut() {
                         set_order_link_id(o);
                     }
@@ -421,15 +477,24 @@ fn orders_create_res_1() {
                 "".to_string(),
                 "buy".to_string(),
                 Signal::new(1., 1.),
-                100. * S.percent_of_capital,
+                100. * S.trade.percent_of_capital,
                 0.,
-                S.leverage,
+                S.trade.leverage,
                 Some(0.9),
                 "limit".to_string(),
                 Default::default(),
                 {
-                    let mut bind =
-                        tp_sl_orders("sl", &S.stoploss, &S, "", "buy", SRC_EL[1], &SIGNAL, "1", 2);
+                    let mut bind = tp_sl_orders(
+                        "sl",
+                        &S.trade.stoploss,
+                        &S.trade,
+                        "",
+                        "buy",
+                        SRC_EL[1],
+                        &SIGNAL,
+                        "1",
+                        2,
+                    );
                     for o in bind.iter_mut() {
                         set_order_link_id(o);
                     }
@@ -447,21 +512,30 @@ fn orders_create_res_1() {
                 "".to_string(),
                 "buy".to_string(),
                 Signal::new(1., 1.),
-                100. * S.percent_of_capital,
+                100. * S.trade.percent_of_capital,
                 0.,
-                S.leverage,
+                S.trade.leverage,
                 Some(0.9),
                 "limit".to_string(),
                 Default::default(),
                 {
-                    let mut bind =
-                        tp_sl_orders("sl", &S.stoploss, &S, "", "buy", SRC_EL[1], &SIGNAL, "1", 2);
+                    let mut bind = tp_sl_orders(
+                        "sl",
+                        &S.trade.stoploss,
+                        &S.trade,
+                        "",
+                        "buy",
+                        SRC_EL[1],
+                        &SIGNAL,
+                        "1",
+                        2,
+                    );
                     for o in bind.iter_mut() {
                         set_order_link_id(o);
                     }
                     bind
                 },
-                Some(S.trigger_by.clone()),
+                Some(S.trade.trigger_by.clone()),
                 Some(0.95),
                 Some(2),
                 false,

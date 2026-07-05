@@ -8,7 +8,7 @@ use crate::unit::trade::prelude::*;
 
 static ST: LazyLock<fn() -> StatCollector<'static>> = LazyLock::new(|| {
     || {
-        let mut bind = StatCollector::new("".to_string(), &S);
+        let mut bind = StatCollector::new("".to_string(), &S.trade);
         bind.cells.extend_from_slice(&[
             TradeCell {
                 capital: 100.,
@@ -20,9 +20,9 @@ static ST: LazyLock<fn() -> StatCollector<'static>> = LazyLock::new(|| {
                         "".to_string(),
                         "buy".to_string(),
                         *SIGNAL,
-                        S.capital * S.percent_of_capital,
+                        S.trade.capital * S.trade.percent_of_capital,
                         0.,
-                        S.leverage,
+                        S.trade.leverage,
                         Some(3.),
                         "limit".to_string(),
                         Default::default(),
@@ -41,8 +41,8 @@ static ST: LazyLock<fn() -> StatCollector<'static>> = LazyLock::new(|| {
                     Position::new(
                         "".to_string(),
                         "buy".to_string(),
-                        S.capital * S.percent_of_capital,
-                        S.leverage,
+                        S.trade.capital * S.trade.percent_of_capital,
+                        S.trade.leverage,
                         1.7,
                         "1".to_string(),
                         true,
@@ -54,9 +54,9 @@ static ST: LazyLock<fn() -> StatCollector<'static>> = LazyLock::new(|| {
                         "".to_string(),
                         "".to_string(),
                         *SIGNAL,
-                        S.capital * S.percent_of_capital,
+                        S.trade.capital * S.trade.percent_of_capital,
                         0.,
-                        S.leverage,
+                        S.trade.leverage,
                         None,
                         "market".to_string(),
                         Default::default(),
@@ -81,8 +81,8 @@ static ST: LazyLock<fn() -> StatCollector<'static>> = LazyLock::new(|| {
                     Position::new(
                         "".to_string(),
                         "buy".to_string(),
-                        S.capital * S.percent_of_capital,
-                        S.leverage,
+                        S.trade.capital * S.trade.percent_of_capital,
+                        S.trade.leverage,
                         1.7,
                         "1".to_string(),
                         false,
@@ -94,9 +94,9 @@ static ST: LazyLock<fn() -> StatCollector<'static>> = LazyLock::new(|| {
                         "".to_string(),
                         "".to_string(),
                         *SIGNAL,
-                        S.capital * S.percent_of_capital,
+                        S.trade.capital * S.trade.percent_of_capital,
                         0.,
-                        S.leverage,
+                        S.trade.leverage,
                         None,
                         "market".to_string(),
                         Default::default(),
@@ -154,15 +154,15 @@ fn to_pnl_res_1() {
     assert_eq_pr!(
         vec![
             qty_pnl(
-                S.leverage,
-                S.capital * S.percent_of_capital,
+                S.trade.leverage,
+                S.trade.capital * S.trade.percent_of_capital,
                 1.7,
                 SRC_EL_L[1],
                 "1"
             ),
             qty_pnl(
-                S.leverage,
-                S.capital * S.percent_of_capital,
+                S.trade.leverage,
+                S.trade.capital * S.trade.percent_of_capital,
                 1.7,
                 SRC_EL[1],
                 "1"
@@ -217,7 +217,7 @@ fn to_positions_entry_exit_res_1() {
 #[test]
 fn to_value_positions_res_1() {
     assert_eq_pr!(
-        vec![S.capital * S.percent_of_capital; 2],
+        vec![S.trade.capital * S.trade.percent_of_capital; 2],
         ST().to_value_positions(|v| v.qty)
     )
 }

@@ -4,11 +4,11 @@ use crate::unit::trade::prelude::*;
 
 #[test]
 fn trade_cell_step_res_1() {
-    let mut cell = TradeCell::new(S.capital, SRC_EL_L2.to_vec(), SRC_EL_L3.to_vec());
-    let order_collectors = OrdersCollectors::new(&S.order_collectors, &FA_O());
+    let mut cell = TradeCell::new(S.trade.capital, SRC_EL_L2.to_vec(), SRC_EL_L3.to_vec());
+    let order_collectors = OrdersCollectors::new(&S.trade.order_collectors, &FA_O());
     let orders_collectors_gw = OrdersCollectorsGateway::new(&order_collectors);
     let (qty_market, commission_market) =
-        qty_and_commission(&S, cell.capital, &SIGNAL, "market", 0., 0.);
+        qty_and_commission(&S.trade, cell.capital, &SIGNAL, "market", 0., 0.);
     let triggers = vec![
         Order::new(
             "symbol".to_string(),
@@ -16,7 +16,7 @@ fn trade_cell_step_res_1() {
             *SIGNAL,
             0.,
             0.3,
-            S.leverage,
+            S.trade.leverage,
             Default::default(),
             "market".to_string(),
             Default::default(),
@@ -35,7 +35,7 @@ fn trade_cell_step_res_1() {
             *SIGNAL,
             0.,
             0.8,
-            S.leverage,
+            S.trade.leverage,
             Default::default(),
             "market".to_string(),
             Default::default(),
@@ -54,7 +54,7 @@ fn trade_cell_step_res_1() {
             *SIGNAL,
             0.,
             1.,
-            S.leverage,
+            S.trade.leverage,
             Default::default(),
             "market".to_string(),
             Default::default(),
@@ -77,7 +77,7 @@ fn trade_cell_step_res_1() {
             *SIGNAL,
             qty_market,
             0.,
-            S.leverage,
+            S.trade.leverage,
             Some(SRC[1][1]),
             "market".to_string(),
             triggers[..2].to_vec(),
@@ -90,12 +90,12 @@ fn trade_cell_step_res_1() {
             "1".to_string(),
             true,
         )],
-        &S,
+        &S.trade,
         &orders_collectors_gw,
         None,
     );
     let mut res = TradeCell::new(
-        S.capital - commission_market - qty_market,
+        S.trade.capital - commission_market - qty_market,
         SRC_EL_L2.to_vec(),
         SRC_EL_L3.to_vec(),
     );
@@ -103,7 +103,7 @@ fn trade_cell_step_res_1() {
         "symbol".to_string(),
         "buy".to_string(),
         qty_market,
-        S.leverage,
+        S.trade.leverage,
         SRC[1][1],
         "1".to_string(),
         true,
@@ -114,7 +114,7 @@ fn trade_cell_step_res_1() {
         &SRC[2],
         &SRC[1],
         Default::default(),
-        &S,
+        &S.trade,
         &orders_collectors_gw,
         None,
     );
@@ -124,10 +124,10 @@ fn trade_cell_step_res_1() {
         .and_modify(|p| {
             let qty_sub = p.qty * 0.3;
             p.qty -= qty_sub;
-            res.capital -= qty_sub * S.commission_market * S.leverage;
+            res.capital -= qty_sub * S.trade.commission_market * S.trade.leverage;
             res.capital += qty_sub;
             res.capital += qty_pnl(
-                S.leverage,
+                S.trade.leverage,
                 qty_sub,
                 p.avg_open_price,
                 SRC[2][4],
@@ -144,7 +144,7 @@ fn trade_cell_step_res_1() {
         &SRC[3],
         &SRC[2],
         Default::default(),
-        &S,
+        &S.trade,
         &orders_collectors_gw,
         None,
     );
@@ -157,10 +157,10 @@ fn trade_cell_step_res_1() {
         .and_modify(|p| {
             let qty_sub = p.qty * 0.8;
             p.qty -= qty_sub;
-            res.capital -= qty_sub * S.commission_market * S.leverage;
+            res.capital -= qty_sub * S.trade.commission_market * S.trade.leverage;
             res.capital += qty_sub;
             res.capital += qty_pnl(
-                S.leverage,
+                S.trade.leverage,
                 qty_sub,
                 p.avg_open_price,
                 SRC[3][4],
@@ -174,7 +174,7 @@ fn trade_cell_step_res_1() {
         &SRC[4],
         &SRC[3],
         Default::default(),
-        &S,
+        &S.trade,
         &orders_collectors_gw,
         None,
     );
@@ -187,10 +187,10 @@ fn trade_cell_step_res_1() {
         .and_modify(|p| {
             let qty_sub = p.qty * 1.;
             p.qty -= qty_sub;
-            res.capital -= qty_sub * S.commission_market * S.leverage;
+            res.capital -= qty_sub * S.trade.commission_market * S.trade.leverage;
             res.capital += qty_sub;
             res.capital += qty_pnl(
-                S.leverage,
+                S.trade.leverage,
                 qty_sub,
                 p.avg_open_price,
                 SRC[4][4],
