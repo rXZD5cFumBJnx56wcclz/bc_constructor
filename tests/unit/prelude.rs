@@ -1,9 +1,11 @@
+pub use std::error::Error;
 pub use std::sync::LazyLock;
 
-pub use pretty_assertions::assert_eq as assert_eq_pr;
+pub use bc_pack_indicators::FUNCS_EXTRACT_ARGS as FA_I;
 pub use bc_utils_lg::statics::prices::*;
 pub use bc_utils_lg::structs::settings::*;
 pub use bc_utils_lg::types::maps::*;
+pub use pretty_assertions::assert_eq as assert_eq_pr;
 
 pub static S: LazyLock<SETTINGS> = LazyLock::new(|| SETTINGS {
     indications: SETTINGS_INDS::from_iter([
@@ -189,5 +191,12 @@ pub static S: LazyLock<SETTINGS> = LazyLock::new(|| SETTINGS {
             ..Default::default()
         },
     )]),
+    files_dir: SETTINGS_FILES_DIR {
+        script_backtest: "test_dir/backtest".into(),
+        script_stat: "test_dir/backtest".into(),
+        backtest: "test_dir/backtest".into(),
+        src: "test_dir/src".into(),
+        train_model: "test_dir/train_model".into(),
+    },
     ..Default::default()
 });

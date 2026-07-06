@@ -2,7 +2,6 @@ use bc_constructor::orders_collectors::{OrdersCollectors, OrdersCollectorsGatewa
 
 use crate::unit::trade::prelude::*;
 
-
 const SRC_EL_L3_: [f64; 9] = [1.91; 9];
 const SRC_EL_L2_: [f64; 9] = [1.9; 9];
 const SRC_EL_L1_: [f64; 9] = [2.02; 9];
@@ -17,7 +16,6 @@ static SRC_: LazyLock<Vec<Vec<f64>>> = LazyLock::new(|| {
         SRC_EL_.to_vec(),
     ]
 });
-
 
 #[test]
 fn trade_cell_step_res_1() {

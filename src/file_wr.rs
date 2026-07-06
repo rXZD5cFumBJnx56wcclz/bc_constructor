@@ -5,14 +5,14 @@ use std::io::{BufWriter, Write};
 use std::path::PathBuf;
 
 use bc_utils::other::transpose;
-use bc_utils_lg::structs::settings::SETTINGS_FILES_PATH;
+use bc_utils_lg::structs::settings::SETTINGS_FILES_DIR;
 use bc_utils_lg::types::maps::{MAP, MAP_LINK, MapTrait};
 use bincode::config::standard;
 use bincode::serde::{decode_from_slice, encode_to_vec};
 
-use crate::visual::BT_SCRIPT;
+use crate::visual::{BT_SCRIPT, STAT_COLUMNS_SCRIPT, STAT_VALUES_SCRIPT};
 
-fn get_backtest_dir(
+pub fn get_backtest_dir(
     dir: &str,
     symbol: &str,
     time: u64,
@@ -43,19 +43,28 @@ where
                 .collect::<Vec<&str>>()
                 .join(" ")
         )?;
-        for i in 0..el.borrow().values().into_iter().next().unwrap().len() {
-            writeln!(
-                buf,
-                "{}",
-                el.borrow()
-                    .values()
-                    .into_iter()
-                    .map(|v| v[i].to_string())
-                    .collect::<Vec<String>>()
-                    .join(" ")
-            )?;
+        if !el.borrow().is_empty() {
+            for i in 0..el
+                .borrow()
+                .values()
+                .into_iter()
+                .next()
+                .unwrap_or(&vec![])
+                .len()
+            {
+                writeln!(
+                    buf,
+                    "{}",
+                    el.borrow()
+                        .values()
+                        .into_iter()
+                        .map(|v| v[i].to_string())
+                        .collect::<Vec<String>>()
+                        .join(" ")
+                )?;
+            }
+            writeln!(buf, "\n\n")?;
         }
-        writeln!(buf, "\n\n")?;
     }
 
     Ok(())
@@ -78,6 +87,10 @@ fn parse_data_columns<'a>(
 ) -> Result<Vec<MAP<String, Vec<f64>>>, Box<dyn Error>> {
     splitted
         .into_iter()
+        .filter(|v| {
+            dbg!(v);
+            !v.is_empty() && *v != "\n"
+        })
         .map(|data| -> Result<MAP<String, Vec<f64>>, Box<dyn Error>> {
             transpose(
                 data.split("\n")
@@ -88,10 +101,13 @@ fn parse_data_columns<'a>(
             .into_iter()
             .map(|v| -> Result<(String, Vec<f64>), Box<dyn Error>> {
                 Ok((
-                    v[0].to_string(),
+                    dbg!(v[0]).to_string(),
                     v.into_iter()
                         .skip(1)
-                        .map(|f| -> Result<f64, Box<dyn Error>> { Ok(f.parse::<f64>()?) })
+                        .map(|f| -> Result<f64, Box<dyn Error>> {
+                            dbg!(f);
+                            Ok(f.parse::<f64>()?)
+                        })
                         .collect::<Result<Vec<f64>, Box<dyn Error>>>()?,
                 ))
             })
@@ -107,6 +123,7 @@ fn parse_data_values<'a>(
         .into_iter()
         .map(|v| {
             v.split("\n")
+                .filter(|v1| !v1.is_empty() && *v1 != "\n")
                 .map(|v2| -> Result<(String, f64), Box<dyn Error>> {
                     let mut sp = v2.split(" ");
                     Ok((
@@ -120,11 +137,11 @@ fn parse_data_values<'a>(
 }
 
 pub struct FileWR<'a> {
-    s: &'a SETTINGS_FILES_PATH,
+    s: &'a SETTINGS_FILES_DIR,
 }
 
 impl<'a> FileWR<'a> {
-    pub fn new(s: &'a SETTINGS_FILES_PATH) -> Self {
+    pub fn new(s: &'a SETTINGS_FILES_DIR) -> Self {
         Self { s }
     }
 }
@@ -134,23 +151,56 @@ impl FileWR<'_> {
         &self,
         src: &Vec<Vec<f64>>,
     ) -> Result<(), Box<dyn Error>> {
-        if !self.s.src_data.as_os_str().is_empty() {
-            create_dir_all(&self.s.src_data)?;
+        if !self.s.src.is_file() {
+            create_dir_all(&self.s.src)?;
             fs::write(
-                &format!("{}/src.bin", self.s.src_data.to_str().unwrap()),
+                &format!("{}/src.bin", self.s.src.to_str().unwrap()),
                 encode_to_vec(src, standard())?,
             )?;
         }
         Ok(())
     }
     pub fn src(&self) -> Result<Vec<Vec<f64>>, Box<dyn Error>> {
-        Ok(decode_from_slice(&fs::read(&self.s.src_data)?, standard())?.0)
+        Ok(decode_from_slice(
+            &fs::read(&format!("{}/src.bin", self.s.src.to_str().ok_or("err")?))?,
+            standard(),
+        )?
+        .0)
     }
     pub fn src_or(
         &self,
         or: Vec<Vec<f64>>,
     ) -> Vec<Vec<f64>> {
         self.src().unwrap_or(or)
+    }
+    pub fn script_write(
+        &self,
+        dir: &str,
+        file_name: &str,
+        script: &str,
+    ) -> Result<(), Box<dyn Error>> {
+        create_dir_all(dir)?;
+        let path = format!("{dir}/{}", file_name);
+        if self.s.script_backtest.is_dir() {
+            let mut file = File::create_new(&path)?;
+            writeln!(file, "{}", script)?;
+        } else {
+            copy(self.s.script_backtest.to_str().unwrap(), path)?;
+        }
+        Ok(())
+    }
+    pub fn script(
+        &self,
+        path: &PathBuf,
+    ) -> Result<String, Box<dyn Error>> {
+        Ok(fs::read_to_string(path)?)
+    }
+    pub fn script_or(
+        &self,
+        path: &PathBuf,
+        script: String,
+    ) -> String {
+        self.script(path).unwrap_or(script)
     }
     pub fn backtest_write(
         &self,
@@ -163,7 +213,13 @@ impl FileWR<'_> {
         let dir = get_backtest_dir(self.s.backtest.to_str().unwrap(), symbol, time);
         create_dir_all(&dir)?;
         if !self.s.backtest.as_os_str().is_empty() {
-            self.script_backtest_write(&dir, symbol)?;
+            self.script_write(&dir, "script_backtest.plt", &BT_SCRIPT(symbol))?;
+            self.script_write(
+                &dir,
+                "script_stat_columns.plt",
+                &STAT_COLUMNS_SCRIPT(symbol),
+            )?;
+            self.script_write(&dir, "script_stat_values.plt", &STAT_VALUES_SCRIPT(symbol))?;
             write_any_data_column(&dir, &format!("{dir}/data.dat"), data)?;
             write_any_data_column::<&MAP<_, _>, MAP<_, _>>(
                 &dir,
@@ -189,18 +245,30 @@ impl FileWR<'_> {
             parse_data_columns(
                 fs::read_to_string(format!("{}/data.dat", dir.to_str().unwrap()))?.split("\n\n"),
             )?,
-            parse_data_columns(
-                [fs::read_to_string(format!("{}/stat_columns.dat", dir.to_str().unwrap()))?
-                    .as_str()]
-                .into_iter(),
-            )?
-            .remove(0),
-            parse_data_values(
-                [fs::read_to_string(format!("{}/stat_values.dat", dir.to_str().unwrap()))?
-                    .as_str()]
-                .into_iter(),
-            )?
-            .remove(0),
+            {
+                let mut bind = parse_data_columns(
+                    [fs::read_to_string(format!("{}/stat_columns.dat", dir.to_str().unwrap()))?
+                        .as_str()]
+                    .into_iter(),
+                )?;
+                if bind.is_empty() {
+                    Default::default()
+                } else {
+                    bind.remove(0)
+                }
+            },
+            {
+                let mut bind = parse_data_values(
+                    [fs::read_to_string(format!("{}/stat_values.dat", dir.to_str().unwrap()))?
+                        .as_str()]
+                    .into_iter(),
+                )?;
+                if bind.is_empty() {
+                    Default::default()
+                } else {
+                    bind.remove(0)
+                }
+            },
         ))
     }
     pub fn backtest_or(
@@ -218,31 +286,6 @@ impl FileWR<'_> {
     ) {
         self.backtest(dir).unwrap_or(or)
     }
-    pub fn script_backtest_write(
-        &self,
-        dir: &str,
-        symbol: &str,
-    ) -> Result<(), Box<dyn Error>> {
-        if self.s.script_backtest.as_os_str().is_empty() {
-            let mut file = File::create_new(format!("{}/{}", dir, "script_data.plt"))?;
-            writeln!(file, "{}", BT_SCRIPT(symbol,))?;
-        } else {
-            copy(
-                self.s.script_backtest.to_str().unwrap(),
-                format!("{dir}/script_data.plt"),
-            )?;
-        }
-        Ok(())
-    }
-    pub fn script_backtest(&self) -> Result<String, Box<dyn Error>> {
-        Ok(fs::read_to_string(&self.s.script_backtest)?)
-    }
-    pub fn script_backtest_or(
-        &self,
-        script_backtest: String,
-    ) -> String {
-        self.script_backtest().unwrap_or(script_backtest)
-    }
     // train_model_write
     // train_model
     // train_model_or
@@ -251,5 +294,14 @@ impl FileWR<'_> {
 impl FileWR<'_> {
     pub fn backtests_del(&self) -> Result<(), Box<dyn Error>> {
         Ok(remove_dir_all(&self.s.backtest)?)
+    }
+    pub fn src_del(&self) -> Result<(), Box<dyn Error>> {
+        Ok(remove_dir_all(&self.s.src)?)
+    }
+    pub fn script_backtest_del(&self) -> Result<(), Box<dyn Error>> {
+        Ok(remove_dir_all(&self.s.script_backtest)?)
+    }
+    pub fn script_stat_del(&self) -> Result<(), Box<dyn Error>> {
+        Ok(remove_dir_all(&self.s.script_stat)?)
     }
 }

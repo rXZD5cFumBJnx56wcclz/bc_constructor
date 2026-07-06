@@ -240,10 +240,14 @@ impl StatCollector<'_> {
                         .map(|(time, pos)| vec![time as f64, pos])
                         .collect::<Vec<Vec<f64>>>(),
                 );
-                MAP_LINK::from_iter([
-                    ("time".to_string(), bind.remove(0)),
-                    ("positions_entry_exit".to_string(), bind.remove(0)),
-                ])
+                if !bind.is_empty() {
+                    MAP_LINK::from_iter([
+                        ("time".to_string(), bind.remove(0)),
+                        ("positions_entry_exit".to_string(), bind.remove(0)),
+                    ])
+                } else {
+                    Default::default()
+                }
             },
         ])
     }

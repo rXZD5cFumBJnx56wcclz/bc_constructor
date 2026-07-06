@@ -106,7 +106,11 @@ fn signals_ready_res_1() {
                 &CONVERT::default()
                     .signals_vec(
                         &TREND_MA::default()
-                            .ind_vec(&SRC.iter().map(|v| v[1..].to_vec()).collect::<Vec<Vec<f64>>>())
+                            .ind_vec(
+                                &SRC.iter()
+                                    .map(|v| v[1..].to_vec())
+                                    .collect::<Vec<Vec<f64>>>(),
+                            )
                             .into_iter()
                             .zip(REPEAT::new(1.0).ind_vec(&SRC))
                             .map(|(v1, v2)| vec![v1, v2])
@@ -196,7 +200,11 @@ fn signals_ready_vec_res_1() {
                 &CONVERT::default()
                     .signals_vec(
                         &TREND_MA::default()
-                            .ind_vec(&SRC.iter().map(|v| v[1..].to_vec()).collect::<Vec<Vec<f64>>>())
+                            .ind_vec(
+                                &SRC.iter()
+                                    .map(|v| v[1..].to_vec())
+                                    .collect::<Vec<Vec<f64>>>(),
+                            )
                             .into_iter()
                             .zip(REPEAT::new(1.0).ind_vec(&SRC))
                             .map(|(v1, v2)| vec![v1, v2])

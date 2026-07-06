@@ -38,7 +38,7 @@ pub async fn backtest(
     time: u64,
 ) -> Result<(), Box<dyn Error>> {
     let exch = BYBIT::new(s);
-    let file_wr = FileWR::new(&s.files_path);
+    let file_wr = FileWR::new(&s.files_dir);
     let mut stat_collector = StatCollector::new(symbol.to_string(), &s.trade);
     let w_max = get_w_max(&s.indications, &FUNCS_EXTRACT_ARGS());
     let src = file_wr.src_or(exch.src_a(symbol, s.trade.klines_qty + w_max, 0, 0).await?);

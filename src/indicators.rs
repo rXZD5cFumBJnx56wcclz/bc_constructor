@@ -116,14 +116,14 @@ impl<'a> Indicators<'a> {
     pub fn new(
         settings: &'a SETTINGS_INDS,
         funcs_extract_args: &FxHashMap<&'a str, fn(&SETTINGS_IND) -> Box<dyn Indicator>>,
-        in_: &[Vec<f64>],
+        src_transpose: &[Vec<f64>],
     ) -> Self {
         let ind_without_bf = get_indicators_from_settings_without_bf(settings, funcs_extract_args);
         Self {
             indicators: get_indicators_from_settings(
                 settings,
                 funcs_extract_args,
-                in_,
+                src_transpose,
                 &ind_without_bf,
             ),
             indicators_without_bf: ind_without_bf,
@@ -131,11 +131,12 @@ impl<'a> Indicators<'a> {
     }
     pub fn update_bf(
         &mut self,
-        in_: &[Vec<f64>],
+        src_transpose: &[Vec<f64>],
         s: &'a SETTINGS_INDS,
         fa: &FUNCS_EXTRACT_ARGS_TYPE<SETTINGS_IND, Box<dyn Indicator>>,
     ) {
-        self.indicators = get_indicators_from_settings(s, fa, in_, &self.indicators_without_bf);
+        self.indicators =
+            get_indicators_from_settings(s, fa, src_transpose, &self.indicators_without_bf);
     }
 }
 

@@ -115,5 +115,5 @@ pub struct Paths {
     #[arg(long)]
     pub script_stat: Option<PathBuf>,
     #[arg(long)]
-    pub src_data: Option<PathBuf>,
+    pub src: Option<PathBuf>,
 }

@@ -91,20 +91,17 @@ pub fn settings_cli_sync(
             .work_in_real_time
             .unwrap_or(settings.trade.work_in_real_time);
     }
-    settings.files_path.script_backtest = paths
+    settings.files_dir.script_backtest = paths
         .script_backtest
         .clone()
-        .unwrap_or(settings.files_path.script_backtest);
-    settings.files_path.script_stat = paths
+        .unwrap_or(settings.files_dir.script_backtest);
+    settings.files_dir.script_stat = paths
         .script_stat
         .clone()
-        .unwrap_or(settings.files_path.script_stat);
-    settings.files_path.backtest = paths.backtest.clone();
-    settings.files_path.src_data = paths
-        .src_data
-        .clone()
-        .unwrap_or(settings.files_path.src_data);
-    settings.files_path.train_model = paths.train_model.clone();
+        .unwrap_or(settings.files_dir.script_stat);
+    settings.files_dir.backtest = paths.backtest.clone();
+    settings.files_dir.src = paths.src.clone().unwrap_or(settings.files_dir.src);
+    settings.files_dir.train_model = paths.train_model.clone();
     settings
 }
 

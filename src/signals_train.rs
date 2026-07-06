@@ -2,10 +2,7 @@ use bc_indicators::ready_imports::Indicator;
 use bc_signals::train::ready_imports::*;
 use bc_utils_lg::{
     structs::settings::SETTINGS,
-    types::{
-        maps::{FUNCS_EXTRACT_ARGS_TYPE, MAP},
-        structures::SRC_TRANSPOSE,
-    },
+    types::maps::{FUNCS_EXTRACT_ARGS_TYPE, MAP},
 };
 
 use crate::indicators::{Indicators, get_in_from_settings};
@@ -16,7 +13,7 @@ pub fn get_signals_arg_from_settings<'a>(
     procedure_used_signals: &Vec<usize>,
     settings_signals: &SETTINGS_SIGNALS,
     settings_indicators: &SETTINGS_INDS,
-    src: &SRC_TRANSPOSE,
+    src_transpose: &[Vec<f64>],
     map_signals: &MAP<&'a str, Box<dyn SignalTrain>>,
     map_indicators: &MAP<&'a str, Box<dyn Indicator>>,
 ) -> Vec<Vec<f64>> {
@@ -28,7 +25,7 @@ pub fn get_signals_arg_from_settings<'a>(
                 &settings_signals[used_signal].used_src,
                 &settings_signals[used_signal].procedure_used_src,
                 settings_indicators,
-                src,
+                src_transpose,
                 map_indicators,
             ),
             &get_signals_arg_from_settings(
@@ -36,7 +33,7 @@ pub fn get_signals_arg_from_settings<'a>(
                 &settings_signals[used_signal].procedure_used_signals,
                 settings_signals,
                 settings_indicators,
-                src,
+                src_transpose,
                 map_signals,
                 map_indicators,
             ),
@@ -82,7 +79,7 @@ pub fn get_signals_from_settings<'a>(
     settings_signals: &'a SETTINGS_SIGNALS,
     settings_indicators: &'a SETTINGS_INDS,
     funcs_extract_args: &MAP<&'a str, fn(&SETTINGS_SIGNAL) -> Box<dyn SignalTrain>>,
-    in_: &[Vec<f64>],
+    src_transpose: &[Vec<f64>],
     map_signals: &MAP<&'a str, Box<dyn SignalTrain>>,
     map_indicators: &MAP<&'a str, Box<dyn Indicator>>,
 ) -> MAP<&'a str, (BF_SIGNALS<'a>, Box<dyn SignalTrain>)> {
@@ -90,7 +87,7 @@ pub fn get_signals_from_settings<'a>(
         .iter()
         .map(|(signal_name, settings_signal)| {
             let signal = funcs_extract_args[settings_signal.key.as_str()](settings_signal);
-            let src = &in_
+            let src_transpose = &src_transpose
                 .into_iter()
                 .map(|v| v[..v.len() - 1].to_vec())
                 .collect::<Vec<Vec<f64>>>();
@@ -103,7 +100,7 @@ pub fn get_signals_from_settings<'a>(
                             &settings_signal.used_src,
                             &settings_signal.procedure_used_src,
                             settings_indicators,
-                            src,
+                            src_transpose,
                             map_indicators,
                         ),
                         &get_signals_arg_from_settings(
@@ -111,7 +108,7 @@ pub fn get_signals_from_settings<'a>(
                             &settings_signal.procedure_used_signals,
                             settings_signals,
                             settings_indicators,
-                            src,
+                            src_transpose,
                             map_signals,
                             map_indicators,
                         ),
@@ -134,7 +131,7 @@ impl<'a> SignalsTrain<'a> {
         s_signals_train: &'a SETTINGS_SIGNALS,
         s_indicators: &'a SETTINGS_INDS,
         funcs_extract_args: &MAP<&'a str, fn(&SETTINGS_SIGNAL) -> Box<dyn SignalTrain>>,
-        in_: &[Vec<f64>],
+        src_transpose: &[Vec<f64>],
         map_indicators: &MAP<&'a str, Box<dyn Indicator>>,
     ) -> Self {
         let signals_train_without_bf =
@@ -144,7 +141,7 @@ impl<'a> SignalsTrain<'a> {
                 s_signals_train,
                 s_indicators,
                 funcs_extract_args,
-                in_,
+                src_transpose,
                 &signals_train_without_bf,
                 map_indicators,
             ),
@@ -153,7 +150,7 @@ impl<'a> SignalsTrain<'a> {
     }
     pub fn update_bf<'b>(
         &mut self,
-        in_: &[Vec<f64>],
+        src_transpose: &[Vec<f64>],
         s: &'a SETTINGS,
         fa: &'b FUNCS_EXTRACT_ARGS_TYPE<SETTINGS_SIGNAL, Box<dyn SignalTrain>>,
         indicators_without_bf: &MAP<&'a str, Box<dyn Indicator>>,
@@ -162,7 +159,7 @@ impl<'a> SignalsTrain<'a> {
             &s.signals_train,
             &s.indications,
             fa,
-            in_,
+            src_transpose,
             &self.signals_train_without_bf,
             indicators_without_bf,
         );
@@ -194,7 +191,7 @@ impl<'a> SignalsTrainGateway<'a> {
     pub fn signals_series(
         &self,
         indications: &MAP<&'a str, f64>,
-        buffer_in: &[Vec<f64>],
+        src_transpose: &[Vec<f64>],
     ) -> MAP<&'a str, f64> {
         unsafe { &*self.settings_signals }
             .iter()
@@ -204,7 +201,7 @@ impl<'a> SignalsTrainGateway<'a> {
                 let mut signals_arg = vec![];
                 for src_arg_el in &setting.1.used_src {
                     src_arg.push({
-                        let sk = &buffer_in[src_arg_el.index];
+                        let sk = &src_transpose[src_arg_el.index];
                         sk[sk.len() - 1 - src_arg_el.sub_from_last_i]
                     });
                 }
@@ -242,7 +239,7 @@ impl<'a> SignalsTrainGateway<'a> {
     }
     pub fn signals_vec(
         &self,
-        src: &SRC_TRANSPOSE,
+        src_transpose: &[Vec<f64>],
     ) -> MAP<&'a str, Vec<f64>> {
         unsafe { &*self.settings_signals }
             .iter()
@@ -257,7 +254,7 @@ impl<'a> SignalsTrainGateway<'a> {
                             &setting.used_src,
                             &setting.procedure_used_src,
                             unsafe { &*self.settings_indicators },
-                            src,
+                            src_transpose,
                             unsafe { &(*self.indicators).indicators_without_bf },
                         ),
                         &get_signals_arg_from_settings(
@@ -265,7 +262,7 @@ impl<'a> SignalsTrainGateway<'a> {
                             &setting.procedure_used_signals,
                             unsafe { &*self.settings_signals },
                             unsafe { &*self.settings_indicators },
-                            src,
+                            src_transpose,
                             unsafe { &(*self.signals_train).signals_train_without_bf },
                             unsafe { &(*self.indicators).indicators_without_bf },
                         ),

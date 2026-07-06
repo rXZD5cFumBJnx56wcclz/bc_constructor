@@ -3,7 +3,7 @@ use bc_utils::other::roll_slice1;
 
 use crate::unit::prelude::*;
 
-static BF: LazyLock<fn() -> Buffer> = LazyLock::new(|| || {Buffer::new(SRC.to_vec())});
+static BF: LazyLock<fn() -> Buffer> = LazyLock::new(|| || Buffer::new(SRC.to_vec()));
 
 #[test]
 fn update_res_1() {
