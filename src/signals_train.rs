@@ -125,8 +125,8 @@ pub fn get_signals_from_settings<'a>(
 
 #[derive(Default)]
 pub struct SignalsTrain<'a> {
-    signals_train_without_bf: MAP<&'a str, Box<dyn SignalTrain>>,
-    signals_train: MAP<&'a str, (BF_SIGNALS<'a>, Box<dyn SignalTrain>)>,
+    pub signals_train_without_bf: MAP<&'a str, Box<dyn SignalTrain>>,
+    pub signals_train: MAP<&'a str, (BF_SIGNALS<'a>, Box<dyn SignalTrain>)>,
 }
 
 impl<'a> SignalsTrain<'a> {

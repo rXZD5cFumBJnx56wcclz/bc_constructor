@@ -2,9 +2,26 @@ use bc_constructor::orders_collectors::{OrdersCollectors, OrdersCollectorsGatewa
 
 use crate::unit::trade::prelude::*;
 
+
+const SRC_EL_L3_: [f64; 9] = [1.91; 9];
+const SRC_EL_L2_: [f64; 9] = [1.9; 9];
+const SRC_EL_L1_: [f64; 9] = [2.02; 9];
+const SRC_EL_L_: [f64; 9] = [2.124; 9];
+const SRC_EL_: [f64; 9] = [1.8; 9];
+static SRC_: LazyLock<Vec<Vec<f64>>> = LazyLock::new(|| {
+    vec![
+        SRC_EL_L3_.to_vec(),
+        SRC_EL_L2_.to_vec(),
+        SRC_EL_L1_.to_vec(),
+        SRC_EL_L_.to_vec(),
+        SRC_EL_.to_vec(),
+    ]
+});
+
+
 #[test]
 fn trade_cell_step_res_1() {
-    let mut cell = TradeCell::new(S.trade.capital, SRC_EL_L2.to_vec(), SRC_EL_L3.to_vec());
+    let mut cell = TradeCell::new(S.trade.capital, SRC_EL_L2_.to_vec(), SRC_EL_L3_.to_vec());
     let order_collectors = OrdersCollectors::new(&S.trade.order_collectors, &FA_O());
     let orders_collectors_gw = OrdersCollectorsGateway::new(&order_collectors);
     let (qty_market, commission_market) =
@@ -22,7 +39,7 @@ fn trade_cell_step_res_1() {
             Default::default(),
             Default::default(),
             Some("last".to_string()),
-            Some(SRC[2][1]),
+            Some(SRC_[2][1]),
             Some(1),
             true,
             "sdlfsdkl2312".to_string(),
@@ -41,7 +58,7 @@ fn trade_cell_step_res_1() {
             Default::default(),
             Default::default(),
             Some("last".to_string()),
-            Some(SRC[3][1]),
+            Some(SRC_[3][1]),
             Some(1),
             true,
             "sdlfsdkl22".to_string(),
@@ -60,7 +77,7 @@ fn trade_cell_step_res_1() {
             Default::default(),
             Default::default(),
             Some("last".to_string()),
-            Some(SRC[4][1]),
+            Some(SRC_[4][1]),
             Some(2),
             true,
             "wesdlfsdkl2312".to_string(),
@@ -69,8 +86,8 @@ fn trade_cell_step_res_1() {
         ),
     ];
     cell.step(
-        &SRC[1],
-        &SRC[0],
+        &SRC_[1],
+        &SRC_[0],
         vec![Order::new(
             "symbol".to_string(),
             "buy".to_string(),
@@ -78,7 +95,7 @@ fn trade_cell_step_res_1() {
             qty_market,
             0.,
             S.trade.leverage,
-            Some(SRC[1][1]),
+            Some(SRC_[1][1]),
             "market".to_string(),
             triggers[..2].to_vec(),
             triggers[1..].to_vec(),
@@ -96,23 +113,23 @@ fn trade_cell_step_res_1() {
     );
     let mut res = TradeCell::new(
         S.trade.capital - commission_market - qty_market,
-        SRC_EL_L2.to_vec(),
-        SRC_EL_L3.to_vec(),
+        SRC_EL_L2_.to_vec(),
+        SRC_EL_L3_.to_vec(),
     );
     res.push_position(Position::new(
         "symbol".to_string(),
         "buy".to_string(),
         qty_market,
         S.trade.leverage,
-        SRC[1][1],
+        SRC_[1][1],
         "1".to_string(),
         true,
     ));
     res.push_triggers_orders(triggers.clone());
     assert_eq_pr!(cell, res);
     cell.step(
-        &SRC[2],
-        &SRC[1],
+        &SRC_[2],
+        &SRC_[1],
         Default::default(),
         &S.trade,
         &orders_collectors_gw,
@@ -130,19 +147,19 @@ fn trade_cell_step_res_1() {
                 S.trade.leverage,
                 qty_sub,
                 p.avg_open_price,
-                SRC[2][4],
+                SRC_[2][4],
                 &p.position_idx,
             );
         });
     res.trigger_orders
         .borrow_mut()
         .remove(triggers[0].order_link_id.as_str());
-    res.src = SRC[2].to_vec();
-    res.src_l = SRC[1].to_vec();
+    res.src = SRC_[2].to_vec();
+    res.src_l = SRC_[1].to_vec();
     assert_eq_pr!(cell, res);
     cell.step(
-        &SRC[3],
-        &SRC[2],
+        &SRC_[3],
+        &SRC_[2],
         Default::default(),
         &S.trade,
         &orders_collectors_gw,
@@ -163,16 +180,16 @@ fn trade_cell_step_res_1() {
                 S.trade.leverage,
                 qty_sub,
                 p.avg_open_price,
-                SRC[3][4],
+                SRC_[3][4],
                 &p.position_idx,
             );
         });
-    res.src = SRC[3].to_vec();
-    res.src_l = SRC[2].to_vec();
+    res.src = SRC_[3].to_vec();
+    res.src_l = SRC_[2].to_vec();
     assert_eq_pr!(cell, res);
     cell.step(
-        &SRC[4],
-        &SRC[3],
+        &SRC_[4],
+        &SRC_[3],
         Default::default(),
         &S.trade,
         &orders_collectors_gw,
@@ -193,12 +210,12 @@ fn trade_cell_step_res_1() {
                 S.trade.leverage,
                 qty_sub,
                 p.avg_open_price,
-                SRC[4][4],
+                SRC_[4][4],
                 &p.position_idx,
             );
         });
     res.positions.borrow_mut().remove("1");
-    res.src = SRC[4].to_vec();
-    res.src_l = SRC[3].to_vec();
+    res.src = SRC_[4].to_vec();
+    res.src_l = SRC_[3].to_vec();
     assert_eq_pr!(cell, res);
 }

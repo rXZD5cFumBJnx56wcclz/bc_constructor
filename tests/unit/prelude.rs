@@ -1,6 +1,7 @@
 pub use std::sync::LazyLock;
 
-pub use bc_utils_lg::statics::prices::{CLOSE, OPEN, OPEN_LAST, SRC_NOMAP, SRC_TRANSPOSE};
+pub use pretty_assertions::assert_eq as assert_eq_pr;
+pub use bc_utils_lg::statics::prices::*;
 pub use bc_utils_lg::structs::settings::*;
 pub use bc_utils_lg::types::maps::*;
 
@@ -13,7 +14,7 @@ pub static S: LazyLock<SETTINGS> = LazyLock::new(|| SETTINGS {
                 kwargs_usize: MAP::from_iter([("window".to_string(), 2)]),
                 kwargs_f64: MAP::default(),
                 kwargs_string: MAP::default(),
-                used_src: vec![SETTINGS_USED_SRC { index: 0, sub_from_last_i: 0 }],
+                used_src: vec![SETTINGS_USED_SRC { index: 1, sub_from_last_i: 0 }],
                 used_ind: vec![],
                 procedure_used: vec![],
             },
@@ -25,7 +26,7 @@ pub static S: LazyLock<SETTINGS> = LazyLock::new(|| SETTINGS {
                 kwargs_usize: MAP::from_iter([("window".to_string(), 3)]),
                 kwargs_f64: MAP::default(),
                 kwargs_string: MAP::default(),
-                used_src: vec![SETTINGS_USED_SRC { index: 0, sub_from_last_i: 0 }],
+                used_src: vec![SETTINGS_USED_SRC { index: 1, sub_from_last_i: 0 }],
                 used_ind: vec![],
                 procedure_used: vec![],
             },
@@ -50,8 +51,8 @@ pub static S: LazyLock<SETTINGS> = LazyLock::new(|| SETTINGS {
                 kwargs_f64: MAP::default(),
                 kwargs_string: MAP::default(),
                 used_src: vec![
-                    SETTINGS_USED_SRC { index: 0, sub_from_last_i: 0 },
-                    SETTINGS_USED_SRC { index: 3, sub_from_last_i: 2 },
+                    SETTINGS_USED_SRC { index: 1, sub_from_last_i: 0 },
+                    SETTINGS_USED_SRC { index: 4, sub_from_last_i: 2 },
                 ],
                 used_ind: vec!["rma_1".to_string()],
                 procedure_used: vec![],
@@ -86,7 +87,7 @@ pub static S: LazyLock<SETTINGS> = LazyLock::new(|| SETTINGS {
             "trend_ma_1".to_string(),
             SETTINGS_IND {
                 key: "trend_ma".to_string(),
-                used_src: vec![SETTINGS_USED_SRC { index: 0, sub_from_last_i: 0 }],
+                used_src: vec![SETTINGS_USED_SRC { index: 1, sub_from_last_i: 0 }],
                 ..Default::default()
             },
         ),
@@ -95,14 +96,19 @@ pub static S: LazyLock<SETTINGS> = LazyLock::new(|| SETTINGS {
             SETTINGS_IND {
                 key: "repeat".to_string(),
                 kwargs_f64: MAP::from_iter([("value".to_string(), 1.0)]),
-                used_src: vec![SETTINGS_USED_SRC { index: 0, sub_from_last_i: 0 }],
+                used_src: vec![SETTINGS_USED_SRC { index: 1, sub_from_last_i: 0 }],
                 ..Default::default()
             },
         ),
     ]),
     signals_train: SETTINGS_SIGNALS::from_iter([(
         "mm_1".to_string(),
-        SETTINGS_SIGNAL { key: "mm".to_string(), ..Default::default() },
+        SETTINGS_SIGNAL {
+            key: "mm".to_string(),
+            kwargs_usize: MAP::from_iter([("window".to_string(), 49)]),
+            used_src: vec![SETTINGS_USED_SRC { index: 1, ..Default::default() }],
+            ..Default::default()
+        },
     )]),
     signals_ready: SETTINGS_SIGNALS::from_iter([
         (
@@ -134,14 +140,14 @@ pub static S: LazyLock<SETTINGS> = LazyLock::new(|| SETTINGS {
             SETTINGS_SIGNAL {
                 key: "th".to_string(),
                 used_src: vec![
-                    SETTINGS_USED_SRC { index: 0, ..Default::default() },
                     SETTINGS_USED_SRC { index: 1, ..Default::default() },
                     SETTINGS_USED_SRC { index: 2, ..Default::default() },
+                    SETTINGS_USED_SRC { index: 3, ..Default::default() },
                 ],
                 kwargs_f64: MAP::from_iter([
                     ("th_min".to_string(), 0.0001),
                     ("th_max".to_string(), 0.0001),
-                    ("limit".to_string(), 0.0001),
+                    ("limit".to_string(), 9999.),
                 ]),
                 kwargs_usize: MAP::from_iter([
                     ("index_normal".to_string(), 0),

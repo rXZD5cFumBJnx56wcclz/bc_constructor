@@ -14,7 +14,7 @@ fn get_signals_train_from_settings_1(c: &mut Criterion) {
         SETTINGS_SIGNAL {
             key: "mm".to_string(),
             kwargs_usize: MAP::from_iter([("window".to_string(), 10)]),
-            used_src: vec![SETTINGS_USED_SRC { index: 0, sub_from_last_i: 0 }],
+            used_src: vec![SETTINGS_USED_SRC { index: 1, sub_from_last_i: 0 }],
             ..Default::default()
         },
     )]);

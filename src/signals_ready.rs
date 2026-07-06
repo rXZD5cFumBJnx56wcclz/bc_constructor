@@ -126,8 +126,8 @@ pub fn get_signals_from_settings<'a>(
 
 #[derive(Default)]
 pub struct SignalsReady<'a> {
-    signals_ready_without_bf: MAP<&'a str, Box<dyn SignalReady>>,
-    signals_ready: MAP<&'a str, (BF_SIGNALS<'a>, Box<dyn SignalReady>)>,
+    pub signals_ready_without_bf: MAP<&'a str, Box<dyn SignalReady>>,
+    pub signals_ready: MAP<&'a str, (BF_SIGNALS<'a>, Box<dyn SignalReady>)>,
 }
 
 impl<'a> SignalsReady<'a> {

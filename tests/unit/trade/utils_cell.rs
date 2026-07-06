@@ -44,7 +44,7 @@ fn qty_pnl_res_1() {
 #[test]
 fn modify_positions_res_1() {
     let price = SRC_EL[1];
-    let mut res = TradeCell::new(S.trade.capital, SRC_EL.to_vec(), SRC_EL_L.to_vec());
+    let mut res = TradeCell::new(S.trade.capital, SRC_EL.to_vec(), SRC_EL1.to_vec());
     let (qty, commission) = qty_and_commission(&S.trade, res.capital, &SIGNAL, "market", 0., 0.);
     res.push_position(Position::new(
         "".to_string(),
@@ -56,7 +56,7 @@ fn modify_positions_res_1() {
         true,
     ));
     res.capital -= qty + commission;
-    let mut cell = TradeCell::new(S.trade.capital, SRC_EL.to_vec(), SRC_EL_L.to_vec());
+    let mut cell = TradeCell::new(S.trade.capital, SRC_EL.to_vec(), SRC_EL1.to_vec());
     modify_positions(
         &S.trade,
         &mut cell,
@@ -85,7 +85,7 @@ fn modify_positions_res_1() {
 
 #[test]
 fn modify_positions_or_not_res_1() {
-    let mut res = TradeCell::new(S.trade.capital, SRC_EL.to_vec(), SRC_EL_L.to_vec());
+    let mut res = TradeCell::new(S.trade.capital, SRC_EL.to_vec(), SRC_EL1.to_vec());
     let (qty, commission) = qty_and_commission(&S.trade, res.capital, &SIGNAL, "market", 0., 0.);
     let (_, commission_limit) = qty_and_commission(&S.trade, res.capital, &SIGNAL, "limit", 0., 0.);
     let price = SRC_EL[1];
@@ -99,7 +99,7 @@ fn modify_positions_or_not_res_1() {
         true,
     ));
     res.capital -= qty * 2. + commission + commission_limit;
-    let mut cell = TradeCell::new(S.trade.capital, SRC_EL.to_vec(), SRC_EL_L.to_vec());
+    let mut cell = TradeCell::new(S.trade.capital, SRC_EL.to_vec(), SRC_EL1.to_vec());
     modify_positions(
         &S.trade,
         &mut cell,
@@ -202,7 +202,7 @@ fn order_create_res_1() {
         {
             let mut bind = order_create(
                 &S.trade,
-                &TradeCell::new(100., SRC_EL_L.to_vec(), SRC_EL_L1.to_vec()),
+                &TradeCell::new(100., SRC_EL1.to_vec(), SRC_EL2.to_vec()),
                 "",
                 Some(1.7),
                 Some(1.75),
@@ -258,7 +258,7 @@ fn orders_market_extern_res_1() {
             orders_market_extern(
                 &mut vec,
                 &S.trade,
-                &TradeCell::new(100., SRC_EL_L.to_vec(), SRC_EL_L1.to_vec()),
+                &TradeCell::new(100., SRC_EL1.to_vec(), SRC_EL2.to_vec()),
                 "",
                 &MAP::from_iter([("th_1", Signal::new(1., 1.))]),
                 &SRC,
@@ -314,7 +314,7 @@ fn orders_limit_extern_res_1() {
             orders_limit_extern(
                 &mut vec,
                 &S.trade,
-                &TradeCell::new(100., SRC_EL_L.to_vec(), SRC_EL_L1.to_vec()),
+                &TradeCell::new(100., SRC_EL1.to_vec(), SRC_EL2.to_vec()),
                 "",
                 &MAP::from_iter([("rsi_1", 0.9)]),
                 &MAP::from_iter([("th_1", Signal::new(1., 1.))]),
@@ -371,7 +371,7 @@ fn orders_trigger_extern_res_1() {
             orders_trigger_extern(
                 &mut vec,
                 &S.trade,
-                &TradeCell::new(100., SRC_EL_L.to_vec(), SRC_EL_L1.to_vec()),
+                &TradeCell::new(100., SRC_EL1.to_vec(), SRC_EL2.to_vec()),
                 "",
                 &MAP::from_iter([("rsi_1", 0.9), ("rsi_2", 0.95)]),
                 &MAP::from_iter([("th_1", Signal::new(1., 1.))]),
@@ -426,7 +426,7 @@ fn orders_create_res_1() {
         {
             let mut vec = orders_create(
                 &S.trade,
-                &TradeCell::new(100., SRC_EL_L.to_vec(), SRC_EL_L1.to_vec()),
+                &TradeCell::new(100., SRC_EL1.to_vec(), SRC_EL2.to_vec()),
                 "",
                 &MAP::from_iter([("rsi_1", 0.9), ("rsi_2", 0.95)]),
                 &MAP::from_iter([("th_1", Signal::new(1., 1.))]),

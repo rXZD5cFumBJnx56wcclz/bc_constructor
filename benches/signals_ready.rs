@@ -17,7 +17,7 @@ fn get_signals_ready_from_settings_1(c: &mut Criterion) {
         "th_1".to_string(),
         SETTINGS_SIGNAL {
             key: "th".to_string(),
-            used_src: vec![SETTINGS_USED_SRC { index: 0, sub_from_last_i: 0 }],
+            used_src: vec![SETTINGS_USED_SRC { index: 1, sub_from_last_i: 0 }],
             ..Default::default()
         },
     )]);
@@ -39,7 +39,7 @@ fn get_signals_ready_from_settings_2(c: &mut Criterion) {
             "trend_ma_1".to_string(),
             SETTINGS_IND {
                 key: "trend_ma".to_string(),
-                used_src: vec![SETTINGS_USED_SRC { index: 0, sub_from_last_i: 0 }],
+                used_src: vec![SETTINGS_USED_SRC { index: 1, sub_from_last_i: 0 }],
                 ..Default::default()
             },
         ),
@@ -48,7 +48,7 @@ fn get_signals_ready_from_settings_2(c: &mut Criterion) {
             SETTINGS_IND {
                 key: "repeat".to_string(),
                 kwargs_f64: MAP::from_iter([("value".to_string(), 1.0)]),
-                used_src: vec![SETTINGS_USED_SRC { index: 0, sub_from_last_i: 0 }],
+                used_src: vec![SETTINGS_USED_SRC { index: 1, sub_from_last_i: 0 }],
                 ..Default::default()
             },
         ),

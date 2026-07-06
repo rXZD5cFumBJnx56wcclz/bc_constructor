@@ -1,7 +1,11 @@
-use std::{ops::Index, slice::SliceIndex};
+use std::{
+    ops::{Deref, Index},
+    slice::SliceIndex,
+};
 
 use bc_utils::other::{roll_slice1, transpose};
 
+#[derive(Clone, PartialEq, Debug)]
 pub struct Buffer(pub Vec<Vec<f64>>);
 
 impl Buffer {
@@ -33,7 +37,6 @@ impl Buffer {
 
 impl Buffer {
     pub fn iter(&self) -> impl Iterator<Item = &Vec<f64>> {
-        // change
         self.0.iter()
     }
     pub fn first(&self) -> Option<&Vec<f64>> {
@@ -69,5 +72,22 @@ impl Extend<Vec<f64>> for Buffer {
         iter: T,
     ) {
         self.0.extend(iter);
+    }
+}
+
+impl Deref for Buffer {
+    type Target = [Vec<f64>];
+    fn deref(&self) -> &Self::Target {
+        self.0.as_slice()
+    }
+}
+
+pub trait ToBuff {
+    fn to_buff(&self) -> Buffer;
+}
+
+impl ToBuff for [Vec<f64>] {
+    fn to_buff(&self) -> Buffer {
+        Buffer(self.to_vec())
     }
 }

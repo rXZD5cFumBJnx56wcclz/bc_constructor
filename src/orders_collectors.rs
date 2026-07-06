@@ -7,7 +7,7 @@ use bc_utils_lg::{
 
 #[derive(Default)]
 pub struct OrdersCollectors {
-    order_collectors: Vec<Box<dyn OrderCollector>>,
+    pub orders_collectors: Vec<Box<dyn OrderCollector>>,
 }
 
 impl OrdersCollectors {
@@ -16,7 +16,7 @@ impl OrdersCollectors {
         fa: &FUNCS_EXTRACT_ARGS_TYPE<SETTINGS_ORDER_COLLECTOR, Box<dyn OrderCollector>>,
     ) -> Self {
         Self {
-            order_collectors: s
+            orders_collectors: s
                 .iter()
                 .map(|setting| fa[setting.key.as_str()](setting))
                 .collect(),
@@ -25,18 +25,18 @@ impl OrdersCollectors {
 }
 
 pub struct OrdersCollectorsGateway {
-    pub order_collectors: *const OrdersCollectors,
+    pub orders_collectors: *const OrdersCollectors,
 }
 
 impl<'a> OrdersCollectorsGateway {
-    pub fn new(order_collectors: *const OrdersCollectors) -> Self {
-        Self { order_collectors }
+    pub fn new(orders_collectors: *const OrdersCollectors) -> Self {
+        Self { orders_collectors }
     }
     pub fn collect_orders(
         &self,
         cell: &TradeCell,
     ) {
-        for order_collector in &unsafe { &*self.order_collectors }.order_collectors {
+        for order_collector in &unsafe { &*self.orders_collectors }.orders_collectors {
             order_collector.collect_orders(cell);
         }
     }

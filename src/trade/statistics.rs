@@ -140,7 +140,7 @@ impl StatCollector<'_> {
         self.into_iter()
             .map(|c| {
                 if c.positions.borrow().values().any(|v| !v.is_active) {
-                    c.src[0]
+                    c.src[1]
                 } else {
                     f64::NAN
                 }

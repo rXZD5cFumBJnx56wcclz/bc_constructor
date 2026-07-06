@@ -6,9 +6,6 @@ use std::ptr;
 
 use bc_indicators::indicator_traits::Indicator;
 use bc_orders_collectors::main_trait::OrderCollector;
-use bc_pack_indicators::FUNCS_EXTRACT_ARGS as FA_I;
-use bc_pack_signals_ready::FUNCS_EXTRACT_ARGS as FA_R;
-use bc_pack_signals_train::FUNCS_EXTRACT_ARGS as FA_T;
 use bc_signals::ready::ready_trait::SignalReady;
 use bc_signals::train::train_trait::SignalTrain;
 use bc_utils_lg::types::maps::MAP;
@@ -20,6 +17,7 @@ use bc_utils_lg::{
     types::maps::FUNCS_EXTRACT_ARGS_TYPE as FA,
 };
 
+use crate::buffer::Buffer;
 use crate::indicators::{Indicators, IndicatorsGateway};
 use crate::orders_collectors::{OrdersCollectors, OrdersCollectorsGateway};
 use crate::signals_ready::{SignalsReady, SignalsReadyGateway};
@@ -28,9 +26,9 @@ use crate::trade::{statistics::StatCollector, structs::StepCell, utils_cell::ord
 
 #[derive(Default)]
 pub struct GWValues<'a> {
-    pub indicators: Indicators<'a>,
-    pub signals_ready: SignalsReady<'a>,
-    pub signals_train: SignalsTrain<'a>,
+    pub indicators: RefCell<Indicators<'a>>,
+    pub signals_ready: RefCell<SignalsReady<'a>>,
+    pub signals_train: RefCell<SignalsTrain<'a>>,
     pub orders_collectors: OrdersCollectors,
 }
 
@@ -45,21 +43,21 @@ impl<'a> GWValues<'a> {
     ) -> Self {
         let bind = Indicators::new(&s.indications, fa_indicators, src);
         Self {
-            signals_ready: SignalsReady::new(
+            signals_ready: RefCell::new(SignalsReady::new(
                 &s.signals_ready,
                 &s.indications,
                 fa_signals_ready,
                 src,
                 &bind.indicators_without_bf,
-            ),
-            signals_train: SignalsTrain::new(
+            )),
+            signals_train: RefCell::new(SignalsTrain::new(
                 &s.signals_train,
                 &s.indications,
                 fa_signals_train,
                 src,
                 &bind.indicators_without_bf,
-            ),
-            indicators: bind,
+            )),
+            indicators: RefCell::new(bind),
             orders_collectors: OrdersCollectors::new(
                 &s.trade.order_collectors,
                 fa_orders_collectors,
@@ -76,7 +74,7 @@ pub struct TradeData<'a> {
     pub orders_collectors_gateway: OrdersCollectorsGateway,
     pub cell: RefCell<TradeCell>,
     pub symbol: &'a str,
-    s: &'a SETTINGS,
+    pub s: &'a SETTINGS,
     _pin: PhantomPinned,
 }
 
@@ -123,21 +121,24 @@ impl<'a> TradeData<'a> {
             _pin: PhantomPinned,
         });
         let outer_mut = unsafe { Pin::as_mut(&mut res).get_unchecked_mut() };
-        outer_mut.indicators_gateway.indicators = &outer_mut.gw_values.indicators;
-        outer_mut.signals_ready_gateway.indicators = &outer_mut.gw_values.indicators;
-        outer_mut.signals_train_gateway.indicators = &outer_mut.gw_values.indicators;
-        outer_mut.signals_ready_gateway.signals_ready = &outer_mut.gw_values.signals_ready;
-        outer_mut.signals_train_gateway.signals_train = &outer_mut.gw_values.signals_train;
-        outer_mut.orders_collectors_gateway.order_collectors =
+        outer_mut.indicators_gateway.indicators = &*outer_mut.gw_values.indicators.borrow();
+        outer_mut.signals_ready_gateway.indicators = &*outer_mut.gw_values.indicators.borrow();
+        outer_mut.signals_train_gateway.indicators = &*outer_mut.gw_values.indicators.borrow();
+        outer_mut.signals_ready_gateway.signals_ready =
+            &*outer_mut.gw_values.signals_ready.borrow();
+        outer_mut.signals_train_gateway.signals_train =
+            &*outer_mut.gw_values.signals_train.borrow();
+        outer_mut.orders_collectors_gateway.orders_collectors =
             &outer_mut.gw_values.orders_collectors;
         res
     }
     pub fn update(
         self: &Pin<Box<Self>>,
-        buffer: &[Vec<f64>],
+        buffer: &Buffer,
         stat_collector: Option<&mut StatCollector<'a>>,
     ) {
-        let indications = self.indicators_gateway.indications_series(buffer);
+        let buff_transposed = buffer.clone().transpose();
+        let indications = self.indicators_gateway.indications_series(&buff_transposed);
         let orders = orders_create(
             &self.s.trade,
             self.cell.borrow().borrow(),
@@ -145,11 +146,11 @@ impl<'a> TradeData<'a> {
             &indications,
             &self
                 .signals_ready_gateway
-                .signals_series(&indications, buffer),
-            buffer,
+                .signals_series(&indications, &buff_transposed),
+            buffer.as_slice(),
         );
         self.as_ref().get_ref().cell.borrow_mut().step(
-            buffer.last().unwrap(),
+            buffer.as_slice().last().unwrap(),
             &buffer[buffer.len() - 2],
             orders,
             &self.as_ref().get_ref().s.trade,
@@ -158,23 +159,28 @@ impl<'a> TradeData<'a> {
         );
     }
     pub fn update_bf(
-        &mut self,
+        self: &Pin<Box<Self>>,
         buffer: &[Vec<f64>],
+        fa_indicators: &FA<SETTINGS_IND, Box<dyn Indicator>>,
+        fa_signals_ready: &FA<SETTINGS_SIGNAL, Box<dyn SignalReady>>,
+        fa_signals_train: &FA<SETTINGS_SIGNAL, Box<dyn SignalTrain>>,
     ) {
-        self.gw_values
-            .indicators
-            .update_bf(buffer, &(&*self.s).indications, &FA_I());
-        self.gw_values.signals_ready.update_bf(
+        self.as_ref().gw_values.indicators.borrow_mut().update_bf(
             buffer,
-            &self.s,
-            &FA_R(),
-            &self.gw_values.indicators.indicators_without_bf,
+            &(&*self.borrow().s).indications,
+            &fa_indicators,
         );
-        self.gw_values.signals_train.update_bf(
+        self.gw_values.signals_ready.borrow_mut().update_bf(
             buffer,
             &self.s,
-            &FA_T(),
-            &self.gw_values.indicators.indicators_without_bf,
+            &fa_signals_ready,
+            &self.gw_values.indicators.borrow().indicators_without_bf,
+        );
+        self.gw_values.signals_train.borrow_mut().update_bf(
+            buffer,
+            &self.s,
+            &fa_signals_train,
+            &self.gw_values.indicators.borrow().indicators_without_bf,
         );
     }
 }

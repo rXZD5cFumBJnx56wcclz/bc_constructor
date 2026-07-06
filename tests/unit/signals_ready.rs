@@ -6,7 +6,7 @@ use bc_pack_indicators::FUNCS_EXTRACT_ARGS as FUNCS_EXTRACT_ARGS_IND;
 use bc_pack_signals_ready::FUNCS_EXTRACT_ARGS as FUNCS_EXTRACT_ARGS_SR;
 use bc_signals::ready::ready_imports::*;
 use bc_signals::ready::{change_signal::CHANGE_SIGNAL, convert::CONVERT, invert::INVERT, th::TH};
-use bc_utils_lg::statics::prices::{SRC_NOMAP, SRC_TRANSPOSE};
+use bc_utils_lg::statics::prices::{SRC, SRC_TRANSPOSE};
 use bc_utils_lg::structs::settings::{
     SETTINGS_IND, SETTINGS_INDS, SETTINGS_SIGNAL, SETTINGS_SIGNALS, SETTINGS_USED_SRC,
 };
@@ -37,7 +37,7 @@ fn signals_ready_res_1() {
             "trend_ma_1".to_string(),
             SETTINGS_IND {
                 key: "trend_ma".to_string(),
-                used_src: vec![SETTINGS_USED_SRC { index: 0, sub_from_last_i: 0 }],
+                used_src: vec![SETTINGS_USED_SRC { index: 1, sub_from_last_i: 0 }],
                 ..Default::default()
             },
         ),
@@ -46,7 +46,7 @@ fn signals_ready_res_1() {
             SETTINGS_IND {
                 key: "repeat".to_string(),
                 kwargs_f64: MAP::from_iter([("value".to_string(), 1.0)]),
-                used_src: vec![SETTINGS_USED_SRC { index: 0, sub_from_last_i: 0 }],
+                used_src: vec![SETTINGS_USED_SRC { index: 1, sub_from_last_i: 0 }],
                 ..Default::default()
             },
         ),
@@ -106,9 +106,9 @@ fn signals_ready_res_1() {
                 &CONVERT::default()
                     .signals_vec(
                         &TREND_MA::default()
-                            .ind_vec(&SRC_NOMAP)
+                            .ind_vec(&SRC.iter().map(|v| v[1..].to_vec()).collect::<Vec<Vec<f64>>>())
                             .into_iter()
-                            .zip(REPEAT::new(1.0).ind_vec(&SRC_NOMAP))
+                            .zip(REPEAT::new(1.0).ind_vec(&SRC))
                             .map(|(v1, v2)| vec![v1, v2])
                             .collect::<Vec<Vec<f64>>>(),
                         &vec![],
@@ -129,7 +129,7 @@ fn signals_ready_vec_res_1() {
             "trend_ma_1".to_string(),
             SETTINGS_IND {
                 key: "trend_ma".to_string(),
-                used_src: vec![SETTINGS_USED_SRC { index: 0, sub_from_last_i: 0 }],
+                used_src: vec![SETTINGS_USED_SRC { index: 1, sub_from_last_i: 0 }],
                 ..Default::default()
             },
         ),
@@ -138,7 +138,7 @@ fn signals_ready_vec_res_1() {
             SETTINGS_IND {
                 key: "repeat".to_string(),
                 kwargs_f64: MAP::from_iter([("value".to_string(), 1.0)]),
-                used_src: vec![SETTINGS_USED_SRC { index: 0, sub_from_last_i: 0 }],
+                used_src: vec![SETTINGS_USED_SRC { index: 1, sub_from_last_i: 0 }],
                 ..Default::default()
             },
         ),
@@ -196,9 +196,9 @@ fn signals_ready_vec_res_1() {
                 &CONVERT::default()
                     .signals_vec(
                         &TREND_MA::default()
-                            .ind_vec(&SRC_NOMAP)
+                            .ind_vec(&SRC.iter().map(|v| v[1..].to_vec()).collect::<Vec<Vec<f64>>>())
                             .into_iter()
-                            .zip(REPEAT::new(1.0).ind_vec(&SRC_NOMAP))
+                            .zip(REPEAT::new(1.0).ind_vec(&SRC))
                             .map(|(v1, v2)| vec![v1, v2])
                             .collect::<Vec<Vec<f64>>>(),
                         &vec![],

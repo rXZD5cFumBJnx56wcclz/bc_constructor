@@ -14,7 +14,7 @@ fn indications_series_1(c: &mut Criterion) {
             kwargs_usize: MAP::from_iter([("window".to_string(), 2)]),
             kwargs_f64: MAP::default(),
             kwargs_string: MAP::default(),
-            used_src: vec![SETTINGS_USED_SRC { index: 0, sub_from_last_i: 0 }],
+            used_src: vec![SETTINGS_USED_SRC { index: 1, sub_from_last_i: 0 }],
             used_ind: vec![],
             procedure_used: vec![],
         },
@@ -36,7 +36,7 @@ fn indications_series_2(c: &mut Criterion) {
                 kwargs_f64: MAP::default(),
                 kwargs_string: MAP::default(),
                 used_src: vec![
-                    SETTINGS_USED_SRC { index: 0, sub_from_last_i: 0 },
+                    SETTINGS_USED_SRC { index: 1, sub_from_last_i: 0 },
                     SETTINGS_USED_SRC { index: 1, sub_from_last_i: 1 },
                     SETTINGS_USED_SRC { index: 2, sub_from_last_i: 1 },
                     SETTINGS_USED_SRC { index: 3, sub_from_last_i: 1 },

@@ -3,7 +3,8 @@ use std::any::Any;
 use bc_indicators::ready_imports::Indicator;
 use bc_indicators::{rma::RMA, rsi::RSI};
 use bc_utils::nums::{nz_coll, round_f};
-use bc_utils_lg::statics::prices::{CLOSE, OPEN, OPEN_LAST, SRC_NOMAP, SRC_TRANSPOSE};
+use bc_utils::other::transpose;
+use bc_utils_lg::statics::prices::{CLOSE, OPEN, OPEN_LAST, SRC_TRANSPOSE};
 use bc_utils_lg::types::maps::MAP;
 use pretty_assertions::assert_eq as assert_eq_pr;
 
@@ -43,7 +44,7 @@ fn indication_res_1() {
                 kwargs_usize: MAP::from_iter([("window".to_string(), 2)]),
                 kwargs_f64: MAP::default(),
                 kwargs_string: MAP::default(),
-                used_src: vec![SETTINGS_USED_SRC { index: 0, sub_from_last_i: 0 }],
+                used_src: vec![SETTINGS_USED_SRC { index: 1, sub_from_last_i: 0 }],
                 used_ind: vec![],
                 procedure_used: vec![],
             },
@@ -68,8 +69,8 @@ fn indication_res_1() {
                 kwargs_f64: MAP::default(),
                 kwargs_string: MAP::default(),
                 used_src: vec![
-                    SETTINGS_USED_SRC { index: 0, sub_from_last_i: 0 },
-                    SETTINGS_USED_SRC { index: 3, sub_from_last_i: 2 },
+                    SETTINGS_USED_SRC { index: 1, sub_from_last_i: 0 },
+                    SETTINGS_USED_SRC { index: 4, sub_from_last_i: 2 },
                 ],
                 used_ind: vec!["rma_1".to_string()],
                 procedure_used: vec![],
@@ -126,7 +127,7 @@ fn indications_vec_res_1() {
             kwargs_usize: MAP::from_iter([("window".to_string(), 2)]),
             kwargs_f64: MAP::default(),
             kwargs_string: MAP::default(),
-            used_src: vec![SETTINGS_USED_SRC { index: 0, sub_from_last_i: 0 }],
+            used_src: vec![SETTINGS_USED_SRC { index: 1, sub_from_last_i: 0 }],
             used_ind: vec![],
             procedure_used: vec![],
         },
@@ -134,7 +135,7 @@ fn indications_vec_res_1() {
     let indicators = Indicators::new(&settings, &FUNCS_EXTRACT_ARGS(), &SRC_TRANSPOSE);
     let indicators_gw = IndicatorsGateway::new(&indicators, &settings);
     let res_1 = indicators_gw.indications_vec(&SRC_TRANSPOSE)["rsi_1"].clone();
-    let res_2 = RSI::new(2).ind_vec(&SRC_NOMAP);
+    let res_2 = RSI::new(2).ind_vec(&transpose(vec![OPEN.to_vec()]));
     assert_eq_pr!(
         nz_coll::<Vec<f64>, _, _>(&res_1, 0.0),
         nz_coll::<Vec<f64>, _, _>(&res_2, 0.0)

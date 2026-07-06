@@ -12,8 +12,8 @@ static ST: LazyLock<fn() -> StatCollector<'static>> = LazyLock::new(|| {
         bind.cells.extend_from_slice(&[
             TradeCell {
                 capital: 100.,
-                src: SRC_EL_L.to_vec(),
-                src_l: SRC_EL_L1.to_vec(),
+                src: SRC_EL1.to_vec(),
+                src_l: SRC_EL2.to_vec(),
                 trigger_orders: RefCell::new(MAP::from_iter([(
                     "1".to_string(),
                     Order::new(
@@ -75,7 +75,7 @@ static ST: LazyLock<fn() -> StatCollector<'static>> = LazyLock::new(|| {
             TradeCell {
                 capital: 100.,
                 src: SRC_EL.to_vec(),
-                src_l: SRC_EL_L.to_vec(),
+                src_l: SRC_EL1.to_vec(),
                 positions: RefCell::new(MAP::from_iter([(
                     "1".to_string(),
                     Position::new(
@@ -139,7 +139,7 @@ fn to_any_res_1() {
 #[test]
 fn to_some_res_1() {
     assert_eq_pr!(
-        vec![SRC_EL_L[1], 0.0],
+        vec![SRC_EL1[1], 0.0],
         nz_coll::<Vec<_>, _, _>(&ST().to_some(|v| v.trigger_orders.borrow(), true), 0.)
     )
 }
@@ -157,7 +157,7 @@ fn to_pnl_res_1() {
                 S.trade.leverage,
                 S.trade.capital * S.trade.percent_of_capital,
                 1.7,
-                SRC_EL_L[1],
+                SRC_EL1[1],
                 "1"
             ),
             qty_pnl(
@@ -175,7 +175,7 @@ fn to_pnl_res_1() {
 #[test]
 fn to_entry_res_1() {
     assert_eq_pr!(
-        vec![SRC_EL_L[1], 0.],
+        vec![SRC_EL1[1], 0.],
         nz_coll::<Vec<f64>, _, _>(&ST().to_entry(), 0.)
     )
 }
@@ -206,12 +206,12 @@ fn to_limit_orders_res_1() {
 
 #[test]
 fn to_entry_and_exit_res_1() {
-    assert_eq_pr!(vec![SRC_EL_L[1], SRC_EL[1],], ST().to_entry_and_exit())
+    assert_eq_pr!(vec![SRC_EL1[1], SRC_EL[1],], ST().to_entry_and_exit())
 }
 
 #[test]
 fn to_positions_entry_exit_res_1() {
-    assert_eq_pr!(vec![SRC_EL_L[1], SRC_EL[1]], ST().to_positions_entry_exit(),)
+    assert_eq_pr!(vec![SRC_EL1[1], SRC_EL[1]], ST().to_positions_entry_exit(),)
 }
 
 #[test]
@@ -228,14 +228,14 @@ fn to_data_res_1() {
         StatData(vec![
             MAP_LINK::from_iter([
                 ("time".to_string(), vec![0., 1.,]),
-                ("open".to_string(), vec![SRC_EL_L[1], SRC_EL[1],]),
-                ("high".to_string(), vec![SRC_EL_L[2], SRC_EL[2],]),
-                ("low".to_string(), vec![SRC_EL_L[3], SRC_EL[3],]),
-                ("close".to_string(), vec![SRC_EL_L[4], SRC_EL[4],]),
-                ("volume".to_string(), vec![SRC_EL_L[5], SRC_EL[5],]),
-                ("turnover".to_string(), vec![SRC_EL_L[6], SRC_EL[6],]),
+                ("open".to_string(), OPEN[48..].to_vec()),
+                ("high".to_string(), HIGH[48..].to_vec()),
+                ("low".to_string(), LOW[48..].to_vec()),
+                ("close".to_string(), CLOSE[48..].to_vec()),
+                ("volume".to_string(), VOLUME[48..].to_vec()),
+                ("turnover".to_string(), TURNOVER[48..].to_vec()),
                 ("capital".to_string(), ST().to_capital()),
-                ("entry".to_string(), vec![SRC_EL_L[1], 0.,]),
+                ("entry".to_string(), vec![SRC_EL1[1], 0.,]),
                 ("exit".to_string(), vec![0., SRC_EL[1],]),
                 (
                     "pnl".to_string(),
@@ -250,7 +250,7 @@ fn to_data_res_1() {
                 ("time".to_string(), vec![0., 1.,]),
                 (
                     "positions_entry_exit".to_string(),
-                    vec![SRC_EL_L[1], SRC_EL[1]]
+                    vec![SRC_EL1[1], SRC_EL[1]]
                 )
             ])
         ]),
