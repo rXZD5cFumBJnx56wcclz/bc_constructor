@@ -1,0 +1,39 @@
+[submodule "crates/bc_indicators"]
+	path = crates/bc_indicators
+	url = git@github.com:rXZD5cFumBJnx56wcclz/bc_indicators.git
+[submodule "crates/bc_signals"]
+	path = crates/bc_signals
+	url = git@github.com:rXZD5cFumBJnx56wcclz/bc_signals.git
+[submodule "crates/bc_signals_gw"]
+	path = crates/bc_signals_gw
+	url = git@github.com:rXZD5cFumBJnx56wcclz/bc_signals_gw.git
+[submodule "crates/bc_indicators_gw"]
+	path = crates/bc_indicators_gw
+	url = git@github.com:rXZD5cFumBJnx56wcclz/bc_indicators_gw.git
+[submodule "crates/bc_orders_collectors"]
+	path = crates/bc_orders_collectors
+	url = git@github.com:rXZD5cFumBJnx56wcclz/bc_orders_collectors.git
+[submodule "crates/bc_orders_collectors_gw"]
+	path = crates/bc_orders_collectors_gw
+	url = git@github.com:rXZD5cFumBJnx56wcclz/bc_orders_collectors_gw.git
+[submodule "crates/bc_exch_api_funcs"]
+	path = crates/bc_exch_api_funcs
+	url = git@github.com:rXZD5cFumBJnx56wcclz/bc_exch_api_funcs.git
+[submodule "crates/bc_file_wr"]
+	path = crates/bc_file_wr
+	url = git@github.com:rXZD5cFumBJnx56wcclz/bc_file_wr.git
+[submodule "crates/bc_trade_simulate"]
+	path = crates/bc_trade_simulate
+	url = git@github.com:rXZD5cFumBJnx56wcclz/bc_trade_simulate.git
+[submodule "crates/bc_utils"]
+	path = crates/bc_utils
+	url = git@github.com:rXZD5cFumBJnx56wcclz/bc_utils.git
+[submodule "crates/bc_utils_lg"]
+	path = crates/bc_utils_lg
+	url = git@github.com:rXZD5cFumBJnx56wcclz/bc_utils_lg.git
+[submodule "crates/bc_utils_core"]
+	path = crates/bc_utils_core
+	url = git@github.com:rXZD5cFumBJnx56wcclz/bc_utils_core.git
+[submodule "crates/bc_visual"]
+	path = crates/bc_visual
+	url = git@github.com:rXZD5cFumBJnx56wcclz/bc_visual.git

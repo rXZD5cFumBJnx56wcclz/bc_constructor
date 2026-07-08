@@ -3,13 +3,25 @@ name = "bc_constructor"
 version = "0.1.0"
 edition = "2024"
 
+[workspace]
+members = [
+    "crates/*",
+]
+
 [dependencies]
-bc_utils_lg = {path = "../bc_utils_lg"}
-bc_indicators = {path = "../bc_indicators"}
-bc_signals = {path = "../bc_signals"}
-bc_orders_collectors = {path="../bc_orders_collectors"}
-bc_exch_api_funcs = {path = "../bc_exch_api_funcs"}
-bc_utils = {path = "../bc_utils"}
+bc_utils = {path = "crates/bc_utils"}
+bc_utils_lg = {path = "crates/bc_utils_lg"}
+bc_exch_api_funcs = {path = "crates/bc_exch_api_funcs"}
+bc_indicators = {path = "crates/bc_indicators"}
+bc_indicators_gw = {path = "crates/bc_indicators_gw"}
+bc_signals = {path = "crates/bc_signals"}
+bc_signals_gw = {path = "crates/bc_signals_gw"}
+bc_orders_collectors = {path = "crates/bc_orders_collectors"}
+bc_orders_collectors_gw = {path = "crates/bc_orders_collectors_gw"}
+bc_trade_simulate = {path = "crates/bc_trade_simulate"}
+bc_visual = {path = "crates/bc_visual"}
+bc_file_wr = {path = "crates/bc_file_wr"}
+# bc_symbols_update = {path = "crates/bc_symbols_update"}
 
 bc_pack_indicators = {path = "../bc_pack_indicators"}
 bc_pack_signals_ready = {path = "../bc_pack_signals_ready"}
@@ -20,27 +32,9 @@ rustc-hash = "1.1"
 serde ={ version = "1.0", features = ["derive"]}
 serde_json5 = "0.1"
 indexmap = {version = "2.0", features=["serde"]}
-num-traits = "0.2.19"
+
 clap = {version="4.6.1", features=["derive"]}
-uuid = { version = "1", features = ["v4"] }
-bincode = {version = "2", features = ["serde"]}
 tokio = {version = "1", features = ["full"]}
 
 [dev-dependencies]
-criterion = {version ="0.3.5", features = ["html_reports"]}
 pretty_assertions = "1"
-
-[[bench]]
-name = "indicators"
-harness = false
-path = "benches/indicators.rs"
-
-[[bench]]
-name = "signals_ready"
-harness = false
-path = "benches/signals_ready.rs"
-
-[[bench]]
-name = "signals_train"
-harness = false
-path = "benches/signals_train.rs"

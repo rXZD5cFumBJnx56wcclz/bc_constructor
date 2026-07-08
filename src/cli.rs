@@ -6,9 +6,7 @@ use clap::{Args, Parser, Subcommand};
 #[command(version)]
 pub struct Cli {
     #[command(flatten)]
-    pub addition_args: Option<AdditionArgs>,
-    #[command(flatten)]
-    pub addition_flugs: Option<AdditionFlags>,
+    pub addition_args_flags: Option<AdditionArgsFlags>,
     #[command(flatten)]
     pub trade: Option<Trade>,
     #[command(flatten)]
@@ -23,20 +21,21 @@ pub enum Commands {
     #[command(alias("upd"))]
     Update,
     #[command(alias("bt"))]
-    Backtest,
+    Backtest(BacktestArgsFlags),
     Bench,
 }
 
 #[derive(Args, Clone, Debug)]
-pub struct AdditionFlags {
-    #[arg(long)]
-    pub save_data: bool,
+pub struct AdditionArgsFlags {
     #[arg(long)]
     pub clear: bool,
 }
 
 #[derive(Args, Clone, Debug)]
-pub struct AdditionArgs {}
+pub struct BacktestArgsFlags {
+    #[arg(long)]
+    pub save_data: bool,
+}
 
 #[derive(Args, Clone, Debug)]
 pub struct Trade {

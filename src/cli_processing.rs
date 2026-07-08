@@ -4,10 +4,8 @@ use std::error::Error;
 
 use bc_utils_lg::structs::settings::SETTINGS;
 
-use crate::{
-    cli::{AdditionArgs, AdditionFlags, Cli},
-    file_wr::FileWR,
-};
+use crate::cli::{AdditionArgsFlags, Cli};
+use bc_file_wr::file_wr::FileWR;
 
 pub fn settings_cli_sync(
     mut settings: SETTINGS,
@@ -105,22 +103,14 @@ pub fn settings_cli_sync(
     settings
 }
 
-pub fn check_addition_flags(
-    addition_flags: &Option<AdditionFlags>,
-    src: &Vec<Vec<f64>>,
+pub fn check_addition_args_flags(
+    v: &Option<AdditionArgsFlags>,
     file_wr: &FileWR,
 ) -> Result<(), Box<dyn Error>> {
-    if let Some(addition_flags) = addition_flags {
-        if addition_flags.save_data {
-            file_wr.src_write(&src)?;
-        }
+    if let Some(addition_flags) = v {
         if addition_flags.clear {
             file_wr.backtests_del()?;
         }
     }
-    Ok(())
-}
-
-pub fn check_addition_args(_addition_args: &Option<AdditionArgs>) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
