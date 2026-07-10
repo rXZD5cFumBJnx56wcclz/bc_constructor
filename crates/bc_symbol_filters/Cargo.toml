@@ -1,0 +1,15 @@
+[package]
+name = "bc_symbol_filters"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+
+[dev-dependencies]
+pretty_assertions = "1"
+criterion = {version = "0.8", features = ["html_reports"]}
+
+[[bench]]
+name = "ordering"
+path = "benches/ordering.rs"
+harness = false
