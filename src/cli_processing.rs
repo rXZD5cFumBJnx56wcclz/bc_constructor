@@ -2,9 +2,9 @@
 
 use std::error::Error;
 
-use bc_utils_lg::structs::settings::SETTINGS;
+use bc_utils_lg::{structs::settings::SETTINGS, types::maps::MAP};
 
-use crate::cli::{AdditionArgsFlags, Cli};
+use crate::cli::{AdditionArgsFlags, BacktestArgsFlags, Cli};
 use bc_file_wr::file_wr::FileWR;
 
 pub fn settings_cli_sync(
@@ -89,17 +89,17 @@ pub fn settings_cli_sync(
             .work_in_real_time
             .unwrap_or(settings.trade.work_in_real_time);
     }
-    settings.files_dir.script_backtest = paths
+    settings.files_path.script_backtest = paths
         .script_backtest
         .clone()
-        .unwrap_or(settings.files_dir.script_backtest);
-    settings.files_dir.script_stat = paths
+        .unwrap_or(settings.files_path.script_backtest);
+    settings.files_path.script_stat = paths
         .script_stat
         .clone()
-        .unwrap_or(settings.files_dir.script_stat);
-    settings.files_dir.backtest = paths.backtest.clone();
-    settings.files_dir.src = paths.src.clone().unwrap_or(settings.files_dir.src);
-    settings.files_dir.train_model = paths.train_model.clone();
+        .unwrap_or(settings.files_path.script_stat);
+    settings.files_path.backtest = paths.backtest.clone();
+    settings.files_path.src = paths.src.clone().unwrap_or(settings.files_path.src);
+    settings.files_path.train_model = paths.train_model.clone();
     settings
 }
 
@@ -109,8 +109,19 @@ pub fn check_addition_args_flags(
 ) -> Result<(), Box<dyn Error>> {
     if let Some(addition_flags) = v {
         if addition_flags.clear {
-            file_wr.backtests_del()?;
+            file_wr.clear()?;
         }
+    }
+    Ok(())
+}
+
+pub fn check_backtest_addition_args_flags(
+    v: &BacktestArgsFlags,
+    file_wr: &FileWR,
+    src_symbols: &MAP<String, Vec<Vec<f64>>>,
+) -> Result<(), Box<dyn Error>> {
+    if v.save_data {
+        file_wr.src_symbols_write(src_symbols)?;
     }
     Ok(())
 }
