@@ -9,6 +9,8 @@ bc_utils = {path = "../bc_utils"}
 bc_symbol_filters = {path = "../bc_symbol_filters"}
 
 [dev-dependencies]
+bc_test_kit = {path = "../bc_test_kit"}
+bc_packs = {path = "../bc_packs"}
+
 pretty_assertions = "1"
 criterion = {version = "0.8", features = ["html_reports"]}
-bc_pack_symbol_filters = {path = "../../../bc_pack_symbol_filters"}

@@ -1,8 +1,8 @@
 use bc_symbol_filters::main_trait::SymbolFilter;
 use bc_utils::other::{transpose, vec_len_sync_set};
 use bc_utils_lg::{
-    structs::settings::{SETTINGS_SYMBOL_FILTER, SETTINGS_SYMBOL_FILTERS},
-    types::maps::{FUNCS_EXTRACT_ARGS_TYPE, MAP},
+    structs::settings::{SETTINGS_SYMBOL_FILTER, SETTINGS_SYMBOL_FILTERS_POST_GEN},
+    types::maps::{MAP, PACK},
 };
 
 fn get_src(
@@ -36,10 +36,7 @@ fn get_src(
     Default::default()
 }
 
-fn get_values(
-    s: &SETTINGS_SYMBOL_FILTER,
-    ind_values: &MAP<&str, f64>,
-) -> Vec<f64> {
+fn get_values(s: &SETTINGS_SYMBOL_FILTER, ind_values: &MAP<&str, f64>) -> Vec<f64> {
     let mut res = vec![];
     for used_ind_stat_values in s.used_ind_stat_values.iter() {
         res.push(ind_values[used_ind_stat_values.as_str()]);
@@ -48,8 +45,8 @@ fn get_values(
 }
 
 pub fn get_map_from_settings<'a>(
-    s: &'a SETTINGS_SYMBOL_FILTERS,
-    fa: &FUNCS_EXTRACT_ARGS_TYPE<SETTINGS_SYMBOL_FILTER, Box<dyn SymbolFilter>>,
+    s: &'a SETTINGS_SYMBOL_FILTERS_POST_GEN,
+    fa: &PACK<SETTINGS_SYMBOL_FILTER, Box<dyn SymbolFilter>>,
 ) -> MAP<&'a str, Box<dyn SymbolFilter>> {
     s.iter()
         .map(|setting| (setting.key.as_str(), fa[setting.key.as_str()](setting)))
@@ -58,13 +55,13 @@ pub fn get_map_from_settings<'a>(
 
 pub struct SymbolFiltersGateway<'a> {
     pub symbol_filters: &'a MAP<&'a str, Box<dyn SymbolFilter>>,
-    pub s: &'a SETTINGS_SYMBOL_FILTERS,
+    pub s: &'a SETTINGS_SYMBOL_FILTERS_POST_GEN,
 }
 
 impl<'a> SymbolFiltersGateway<'a> {
     pub fn new(
         symbol_filters: &'a MAP<&'a str, Box<dyn SymbolFilter>>,
-        s: &'a SETTINGS_SYMBOL_FILTERS,
+        s: &'a SETTINGS_SYMBOL_FILTERS_POST_GEN,
     ) -> Self {
         Self { symbol_filters, s }
     }
@@ -77,7 +74,7 @@ impl SymbolFiltersGateway<'_> {
         ind: &MAP<&str, Vec<f64>>,
         ind_columns: &MAP<&str, Vec<f64>>,
         ind_values: &MAP<&str, f64>,
-        fa: &FUNCS_EXTRACT_ARGS_TYPE<SETTINGS_SYMBOL_FILTER, Box<dyn SymbolFilter>>,
+        fa: &PACK<SETTINGS_SYMBOL_FILTER, Box<dyn SymbolFilter>>,
     ) -> bool {
         self.s
             .iter()
@@ -97,7 +94,7 @@ impl SymbolFiltersGateway<'_> {
         ind: &MAP<String, MAP<&str, Vec<f64>>>,
         ind_columns: &MAP<String, MAP<&str, Vec<f64>>>,
         ind_values: &MAP<String, MAP<&str, f64>>,
-        fa: &FUNCS_EXTRACT_ARGS_TYPE<SETTINGS_SYMBOL_FILTER, Box<dyn SymbolFilter>>,
+        fa: &PACK<SETTINGS_SYMBOL_FILTER, Box<dyn SymbolFilter>>,
     ) -> Vec<bool> {
         src.iter()
             .map(|(symbol, src_value)| {
@@ -117,7 +114,7 @@ impl SymbolFiltersGateway<'_> {
         ind: &MAP<&str, Vec<f64>>,
         ind_columns: &MAP<&str, Vec<f64>>,
         ind_values: &MAP<&str, f64>,
-        fa: &FUNCS_EXTRACT_ARGS_TYPE<SETTINGS_SYMBOL_FILTER, Box<dyn SymbolFilter>>,
+        fa: &PACK<SETTINGS_SYMBOL_FILTER, Box<dyn SymbolFilter>>,
         symbol: &str,
     ) -> Option<String> {
         if self.symbol_filters(src, ind, ind_columns, ind_values, fa) {
@@ -132,7 +129,7 @@ impl SymbolFiltersGateway<'_> {
         ind: &MAP<String, MAP<&str, Vec<f64>>>,
         ind_columns: &MAP<String, MAP<&str, Vec<f64>>>,
         ind_values: &MAP<String, MAP<&str, f64>>,
-        fa: &FUNCS_EXTRACT_ARGS_TYPE<SETTINGS_SYMBOL_FILTER, Box<dyn SymbolFilter>>,
+        fa: &PACK<SETTINGS_SYMBOL_FILTER, Box<dyn SymbolFilter>>,
     ) -> Vec<String> {
         src.iter()
             .filter_map(|(k, v)| {
@@ -148,12 +145,12 @@ mod tests {
 
     use std::sync::LazyLock;
 
-    use bc_pack_symbol_filters::FUNCS_EXTRACT_ARGS as FA;
-    use bc_utils_lg::statics::prices::SRC;
+    use bc_packs::PACK_SYMBOL_FILT;
+    use bc_test_kit::prelude::*;
     use pretty_assertions::assert_eq as assert_eq_pr;
 
-    static S: LazyLock<SETTINGS_SYMBOL_FILTERS> = LazyLock::new(|| {
-        SETTINGS_SYMBOL_FILTERS::from_iter([SETTINGS_SYMBOL_FILTER {
+    static S: LazyLock<SETTINGS_SYMBOL_FILTERS_POST_GEN> = LazyLock::new(|| {
+        SETTINGS_SYMBOL_FILTERS_POST_GEN::from_iter([SETTINGS_SYMBOL_FILTER {
             key: "ordering".to_string(),
             kwargs_f64: MAP::from_iter([("value".to_string(), 1.)]),
             used_ind_stat_values: vec!["value".to_string()],
@@ -163,7 +160,7 @@ mod tests {
 
     #[test]
     fn symbol_filters_res_1() {
-        let bind = get_map_from_settings(&S, &FA());
+        let bind = get_map_from_settings(&S, &PACK_SYMBOL_FILT);
         let gw = SymbolFiltersGateway::new(&bind, &S);
         assert_eq_pr!(
             gw.symbol_filters(
@@ -171,7 +168,7 @@ mod tests {
                 &Default::default(),
                 &Default::default(),
                 &MAP::from_iter([("value", 0.9)]),
-                &FA()
+                &PACK_SYMBOL_FILT
             ),
             true
         );
@@ -179,7 +176,7 @@ mod tests {
 
     #[test]
     fn symbols_filters_res_1() {
-        let bind = get_map_from_settings(&S, &FA());
+        let bind = get_map_from_settings(&S, &PACK_SYMBOL_FILT);
         let gw = SymbolFiltersGateway::new(&bind, &S);
         assert_eq_pr!(
             vec![true, true],
@@ -200,14 +197,14 @@ mod tests {
                     ("1".to_string(), MAP::from_iter([("value", 0.9)])),
                     ("2".to_string(), MAP::from_iter([("value", 0.9)]))
                 ]),
-                &FA()
+                &PACK_SYMBOL_FILT
             )
         )
     }
 
     #[test]
     fn symbol_filters_added_res_1() {
-        let bind = get_map_from_settings(&S, &FA());
+        let bind = get_map_from_settings(&S, &PACK_SYMBOL_FILT);
         let gw = SymbolFiltersGateway::new(&bind, &S);
         assert_eq_pr!(
             gw.symbol_filters_added(
@@ -215,7 +212,7 @@ mod tests {
                 &Default::default(),
                 &Default::default(),
                 &MAP::from_iter([("value", 0.9)]),
-                &FA(),
+                &PACK_SYMBOL_FILT,
                 "1",
             ),
             Some("1".to_string())
@@ -224,7 +221,7 @@ mod tests {
 
     #[test]
     fn symbols_filters_added_res_1() {
-        let bind = get_map_from_settings(&S, &FA());
+        let bind = get_map_from_settings(&S, &PACK_SYMBOL_FILT);
         let gw = SymbolFiltersGateway::new(&bind, &S);
         assert_eq_pr!(
             vec!["1".to_string(), "2".to_string()],
@@ -245,7 +242,7 @@ mod tests {
                     ("1".to_string(), MAP::from_iter([("value", 0.9)])),
                     ("2".to_string(), MAP::from_iter([("value", 0.9)]))
                 ]),
-                &FA()
+                &PACK_SYMBOL_FILT
             )
         )
     }
