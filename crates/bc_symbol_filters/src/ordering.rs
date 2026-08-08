@@ -6,10 +6,7 @@ pub struct ORDERING {
 }
 
 impl ORDERING {
-    pub fn new(
-        value: f64,
-        type_: String,
-    ) -> Self {
+    pub fn new(value: f64, type_: String) -> Self {
         Self { value, type_ }
     }
 }
@@ -24,11 +21,7 @@ impl Default for ORDERING {
 }
 
 impl SymbolFilter for ORDERING {
-    fn symbol_filter(
-        &self,
-        _: &[Vec<f64>],
-        ind_values: &[f64],
-    ) -> bool {
+    fn symbol_filter(&self, _: &[Vec<f64>], ind_values: &[f64]) -> bool {
         let bind = self.type_.as_str();
         let ind_value = ind_values[0];
         match bind {
@@ -46,7 +39,7 @@ mod tests {
     use crate::prelude_tests::prelude::*;
 
     #[test]
-    fn symbols_is_passed_res_1() {
+    fn symbol_filter_res_1() {
         assert_eq_pr!(
             ORDERING::new(1., "less".to_string()).symbol_filter(&[], &[0.9]),
             true

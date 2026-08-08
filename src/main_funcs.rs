@@ -14,11 +14,11 @@ use bc_file_wr::file_wr::FileWR;
 use bc_indicators::main_trait::Indicator;
 use bc_indicators_gw::gw::get_w_max;
 use bc_orders_collectors::main_trait::OrderCollector;
-use bc_signals::ready::main_trait::SignalReady;
+use bc_signals::main_trait::SignalReady;
 use bc_signals::train::main_trait::SignalTrain;
 use bc_symbol_filters::main_trait::SymbolFilter;
 use bc_symbol_filters_gw::gw::{SymbolFiltersGateway, get_map_from_settings};
-use bc_trade_simulate::{
+use bc_trade_state::{
     backtest::{backtest, backtest_multi},
     trade_data::AfterTradeData,
 };
@@ -26,7 +26,7 @@ use bc_utils_lg::{
     structs::settings::{
         SETTINGS, SETTINGS_IND, SETTINGS_ORDER_COLLECTOR, SETTINGS_SIGNAL, SETTINGS_SYMBOL_FILTER,
     },
-    types::maps::{FUNCS_EXTRACT_ARGS_TYPE as FA, MAP},
+    types::maps::{PACK as FA, MAP},
 };
 
 use crate::{
@@ -75,7 +75,7 @@ pub fn symbol_with_backtest(
     src: Vec<Vec<f64>>,
     w_max: usize,
     fa_indicators: &FA<SETTINGS_IND, Box<dyn Indicator>>,
-    fa_signals_ready: &FA<SETTINGS_SIGNAL, Box<dyn SignalReady>>,
+    fa_signals: &FA<SETTINGS_SIGNAL, Box<dyn SignalReady>>,
     fa_signals_train: &FA<SETTINGS_SIGNAL, Box<dyn SignalTrain>>,
     fa_orders_collectors: &FA<SETTINGS_ORDER_COLLECTOR, Box<dyn OrderCollector>>,
     fa: &FA<SETTINGS_SYMBOL_FILTER, Box<dyn SymbolFilter>>,
@@ -87,7 +87,7 @@ pub fn symbol_with_backtest(
         src.clone(),
         w_max,
         fa_indicators,
-        fa_signals_ready,
+        fa_signals,
         fa_signals_train,
         fa_orders_collectors,
     );
@@ -108,7 +108,7 @@ pub fn symbols_with_backtest(
     src: MAP<String, Vec<Vec<f64>>>,
     w_max: usize,
     fa_indicators: &FA<SETTINGS_IND, Box<dyn Indicator>>,
-    fa_signals_ready: &FA<SETTINGS_SIGNAL, Box<dyn SignalReady>>,
+    fa_signals: &FA<SETTINGS_SIGNAL, Box<dyn SignalReady>>,
     fa_signals_train: &FA<SETTINGS_SIGNAL, Box<dyn SignalTrain>>,
     fa_orders_collectors: &FA<SETTINGS_ORDER_COLLECTOR, Box<dyn OrderCollector>>,
     fa: &FA<SETTINGS_SYMBOL_FILTER, Box<dyn SymbolFilter>>,
@@ -128,7 +128,7 @@ pub fn symbols_with_backtest(
                 v,
                 w_max,
                 fa_indicators,
-                fa_signals_ready,
+                fa_signals,
                 fa_signals_train,
                 fa_orders_collectors,
                 fa,
@@ -141,7 +141,7 @@ pub fn symbols_with_backtest(
 pub async fn init_data<'a>(
     s: &'a SETTINGS,
     fa_indicators: &FA<SETTINGS_IND, Box<dyn Indicator>>,
-    fa_signals_ready: &FA<SETTINGS_SIGNAL, Box<dyn SignalReady>>,
+    fa_signals: &FA<SETTINGS_SIGNAL, Box<dyn SignalReady>>,
     fa_signals_train: &FA<SETTINGS_SIGNAL, Box<dyn SignalTrain>>,
     fa_orders_collectors: &FA<SETTINGS_ORDER_COLLECTOR, Box<dyn OrderCollector>>,
     fa_symbol_filters: &FA<SETTINGS_SYMBOL_FILTER, Box<dyn SymbolFilter>>,
@@ -169,7 +169,7 @@ pub async fn init_data<'a>(
             .unwrap(),
         w_max,
         fa_indicators,
-        fa_signals_ready,
+        fa_signals,
         fa_signals_train,
         fa_orders_collectors,
         fa_symbol_filters,
@@ -181,7 +181,7 @@ pub async fn backtest_multi_main(
     s: &SETTINGS,
     cli: &Cli,
     fa_indicators: &FA<SETTINGS_IND, Box<dyn Indicator>>,
-    fa_signals_ready: &FA<SETTINGS_SIGNAL, Box<dyn SignalReady>>,
+    fa_signals: &FA<SETTINGS_SIGNAL, Box<dyn SignalReady>>,
     fa_signals_train: &FA<SETTINGS_SIGNAL, Box<dyn SignalTrain>>,
     fa_orders_collectors: &FA<SETTINGS_ORDER_COLLECTOR, Box<dyn OrderCollector>>,
     fa_symbol_filters: &FA<SETTINGS_SYMBOL_FILTER, Box<dyn SymbolFilter>>,
@@ -194,7 +194,7 @@ pub async fn backtest_multi_main(
     let (file_wr, exch, symbols, w_max) = init_data(
         s,
         fa_indicators,
-        fa_signals_ready,
+        fa_signals,
         fa_signals_train,
         fa_orders_collectors,
         fa_symbol_filters,
@@ -213,7 +213,7 @@ pub async fn backtest_multi_main(
         src_symbols,
         w_max,
         fa_indicators,
-        fa_signals_ready,
+        fa_signals,
         fa_signals_train,
         fa_orders_collectors,
     );

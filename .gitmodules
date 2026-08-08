@@ -22,9 +22,9 @@
 [submodule "crates/bc_file_wr"]
 	path = crates/bc_file_wr
 	url = git@github.com:rXZD5cFumBJnx56wcclz/bc_file_wr.git
-[submodule "crates/bc_trade_simulate"]
-	path = crates/bc_trade_simulate
-	url = git@github.com:rXZD5cFumBJnx56wcclz/bc_trade_simulate.git
+[submodule "crates/bc_trade_state"]
+	path = crates/bc_trade_state
+	url = git@github.com:rXZD5cFumBJnx56wcclz/bc_trade_state.git
 [submodule "crates/bc_utils"]
 	path = crates/bc_utils
 	url = git@github.com:rXZD5cFumBJnx56wcclz/bc_utils.git

@@ -6,22 +6,22 @@ pub struct PRIORITY {
     pub priority_out_of_position: usize,
 }
 
-impl OrderFilter for PRIORITY {
-    fn bf<'a>(
-        &self,
-        _: &[Option<&(Order, bool, Option<Trigger>)>],
-        _: &[f64],
-        _: &[Signal],
-        _: &TradeState,
-    ) -> BF_ORDER_FILTER<'a> {
-        Default::default()
+impl PRIORITY {
+    pub fn new(priority_in_position: usize, priority_out_of_position: usize) -> Self {
+        Self {
+            priority_in_position,
+            priority_out_of_position,
+        }
     }
+}
+
+impl OrderFilter for PRIORITY {
+    fn init_bf(&self) {}
     fn filter<'a>(
         &self,
-        _: &RefCell<MAP<&str, Vec<f64>>>,
         orders: &[Option<&'a (Order, bool, Option<Trigger>)>],
-        _: &[f64],
-        _: &[Signal],
+        _src: &[f64],
+        _signals: &[Signal],
         state: &TradeState,
     ) -> Option<&'a (Order, bool, Option<Trigger>)> {
         if orders
@@ -71,7 +71,6 @@ mod tests {
                 priority_out_of_position: 1,
             }
             .filter(
-                &Default::default(),
                 &[
                     Some(&(
                         Order {
@@ -116,7 +115,6 @@ mod tests {
                 priority_out_of_position: 1,
             }
             .filter(
-                &Default::default(),
                 &[
                     Some(&(
                         Order {
@@ -161,7 +159,6 @@ mod tests {
                 priority_out_of_position: 0,
             }
             .filter(
-                &Default::default(),
                 &[
                     Some(&(
                         Order {

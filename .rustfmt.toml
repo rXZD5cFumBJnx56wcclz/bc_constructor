@@ -1,22 +1,7 @@
-# Расположение аргументов функции:
-# "Tall" - каждый аргумент на отдельной строке (если не помещается)
-# "Compressed" -尽量 всё в одну строку
-# "Vertical" - всегда каждый аргумент на отдельной строке
-fn_params_layout = "Vertical"
-use_small_heuristics = "Off"
-
-# Максимальная ширина строки (по умолчанию 100)
 max_width = 100
-
-# Максимальная ширина списка аргументов функции
-# Если аргументы превышают это — перенос на новую строку
-fn_call_width = 60
-
-# Максимальная ширина цепи методов (для .method().method())
-chain_width = 60
-
-# Структуры/кортежи: ширина для однострочного варианта
-struct_lit_width = 50
-
-# Альтернатива: всегда каждый аргумент на отдельной строке
-# fn_args_layout = "Vertical"
+reorder_imports = true
+newline_style = "Unix"
+use_field_init_shorthand = true
+use_try_shorthand = true
+merge_derives = true
+edition = "2024"

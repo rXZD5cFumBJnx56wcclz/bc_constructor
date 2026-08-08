@@ -1,36 +1,53 @@
 use crate::prelude::*;
 
 #[derive(Debug, Clone, Default)]
+pub struct CountParams {
+    pub max_count: usize,
+}
+
+impl CountParams {
+    pub fn new(max_count: usize) -> Self {
+        Self { max_count }
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct CountBf {
+    count: usize,
+}
+
+#[derive(Debug, Clone, Default)]
 pub struct COUNT {
-    pub max_count: f64,
+    pub params: CountParams,
+    bf: RefCell<CountBf>,
+}
+
+impl COUNT {
+    pub fn new(max_count: usize) -> Self {
+        Self {
+            params: CountParams::new(max_count),
+            ..Default::default()
+        }
+    }
 }
 
 impl OrderFilter for COUNT {
-    fn bf<'a>(
-        &self,
-        _: &[Option<&(Order, bool, Option<Trigger>)>],
-        _: &[f64],
-        _: &[Signal],
-        _: &TradeState,
-    ) -> BF_ORDER_FILTER<'a> {
-        BF_ORDER_FILTER::from_iter([("count", vec![0.])])
+    fn init_bf(&self) {
+        *self.bf.borrow_mut() = Default::default();
     }
     fn filter<'a>(
         &self,
-        bf: &RefCell<MAP<&str, Vec<f64>>>,
         orders: &[Option<&'a (Order, bool, Option<Trigger>)>],
-        src: &[f64],
-        signals: &[Signal],
+        _src: &[f64],
+        _signals: &[Signal],
         state: &TradeState,
     ) -> Option<&'a (Order, bool, Option<Trigger>)> {
         if state.positions.borrow().is_empty() {
-            *bf.borrow_mut() = self.bf(orders, src, signals, state).into_inner();
+            *self.bf.borrow_mut() = Default::default();
         }
-        let count_res = orders.len() as f64 + bf.borrow()["count"][0];
-        if count_res <= self.max_count {
-            bf.borrow_mut()
-                .entry("count")
-                .and_modify(|v| *v.get_mut(0).unwrap() = count_res);
+        let count_res = orders.len() + self.bf.borrow().count;
+        if count_res <= self.params.max_count {
+            self.bf.borrow_mut().count += 1;
             *orders.get(0).unwrap()
         } else {
             None
@@ -40,24 +57,18 @@ impl OrderFilter for COUNT {
 
 #[cfg(test)]
 mod tests {
+    use std::sync::LazyLock;
+
     use super::*;
     use crate::prelude_tests::prelude::*;
 
-    #[test]
-    fn bf_res_1() {
-        assert_eq_pr!(
-            COUNT { max_count: 2. }.bf(&[], &[], &[], &Default::default()),
-            BF_ORDER_FILTER::from_iter([("count", vec![0.])])
-        )
-    }
+    static BIND: LazyLock<fn() -> COUNT> = LazyLock::new(|| || COUNT::new(2));
 
     #[test]
     fn filter_res_1() {
-        let bf = BF_ORDER_FILTER::from_iter([("count", vec![0.])]);
-        let count = COUNT { max_count: 2. };
+        let count = BIND();
         assert_eq_pr!(
             count.filter(
-                &bf,
                 &[Some(&(Default::default()))],
                 &[],
                 &[],
@@ -70,7 +81,6 @@ mod tests {
         );
         assert_eq_pr!(
             count.filter(
-                &bf,
                 &[Some(&(Default::default()))],
                 &[],
                 &[],
@@ -83,7 +93,6 @@ mod tests {
         );
         assert_eq_pr!(
             count.filter(
-                &bf,
                 &[Some(&(Default::default()))],
                 &[],
                 &[],
@@ -98,11 +107,9 @@ mod tests {
 
     #[test]
     fn filter_res_2() {
-        let bf = BF_ORDER_FILTER::from_iter([("count", vec![0.])]);
-        let count = COUNT { max_count: 1. };
+        let count = BIND();
         assert_eq_pr!(
             count.filter(
-                &bf,
                 &[Some(&(Default::default()))],
                 &[],
                 &[],
@@ -112,7 +119,6 @@ mod tests {
         );
         assert_eq_pr!(
             count.filter(
-                &bf,
                 &[Some(&(Default::default()))],
                 &[],
                 &[],
@@ -124,11 +130,9 @@ mod tests {
 
     #[test]
     fn filter_res_3() {
-        let bf = BF_ORDER_FILTER::from_iter([("count", vec![0.])]);
-        let count = COUNT { max_count: 1. };
+        let count = COUNT::new(1);
         assert_eq_pr!(
             count.filter(
-                &bf,
                 &[Some(&(Default::default()))],
                 &[],
                 &[],
@@ -136,9 +140,9 @@ mod tests {
             ),
             Some(&(Default::default()))
         );
+        dbg!(count.bf.borrow());
         assert_eq_pr!(
             count.filter(
-                &bf,
                 &[Some(&(Default::default()))],
                 &[],
                 &[],

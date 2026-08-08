@@ -9,31 +9,32 @@ members = [
 ]
 
 [dependencies]
-bc_utils = {path = "crates/bc_utils"}
 bc_utils_lg = {path = "crates/bc_utils_lg"}
+bc_utils = {path = "crates/bc_utils"}
+bc_test_kit = {path = "crates/bc_test_kit"}
 bc_exch_api_funcs = {path = "crates/bc_exch_api_funcs"}
 bc_indicators = {path = "crates/bc_indicators"}
+bc_data_generation = {path = "crates/bc_data_generation"}
 bc_indicators_gw = {path = "crates/bc_indicators_gw"}
 bc_signals = {path = "crates/bc_signals"}
 bc_signals_gw = {path = "crates/bc_signals_gw"}
+bc_signals_train = {path = "crates/bc_signals_train"}
+bc_signals_train_gw = {path = "crates/bc_signals_train_gw"}
+bc_order_creator_gw = {path = "crates/bc_order_creator_gw"}
+bc_order_filters = {path = "crates/bc_order_filters"}
+bc_order_filters_gw = {path = "crates/bc_order_filters_gw"}
 bc_orders_collectors = {path = "crates/bc_orders_collectors"}
 bc_orders_collectors_gw = {path = "crates/bc_orders_collectors_gw"}
-bc_trade_simulate = {path = "crates/bc_trade_simulate"}
-bc_visual = {path = "crates/bc_visual"}
+bc_utils_state = {path = "crates/bc_utils_state"}
+bc_utils_state_gw = {path = "crates/bc_utils_state_gw"}
+bc_trade_state = {path = "crates/bc_trade_state"}
+bc_statistics = {path = "crates/bc_statistics"}
+bc_runtime_components = {path = "crates/bc_runtime_components"}
+bc_backtest = {path = "crates/bc_backtest"}
 bc_file_wr = {path = "crates/bc_file_wr"}
 bc_symbol_filters = {path = "crates/bc_symbol_filters"}
 bc_symbol_filters_gw = {path = "crates/bc_symbol_filters_gw"}
-
-bc_pack_indicators = {path = "../bc_pack_indicators"}
-bc_pack_signals_ready = {path = "../bc_pack_signals_ready"}
-bc_pack_signals_train = {path = "../bc_pack_signals_train"} 
-bc_pack_orders_collectors = {path = "../bc_pack_orders_collectors"} 
-bc_pack_symbol_filters = {path = "../bc_pack_symbol_filters"} 
-
-rustc-hash = "1.1"
-serde ={ version = "1.0", features = ["derive"]}
-serde_json5 = "0.1"
-indexmap = {version = "2.0", features=["serde"]}
+bc_packs = {path = "crates/bc_packs"}
 
 clap = {version="4.6.1", features=["derive"]}
 tokio = {version = "1", features = ["full"]}

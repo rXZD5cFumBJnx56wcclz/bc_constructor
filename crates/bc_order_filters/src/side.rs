@@ -5,23 +5,20 @@ pub struct SIDE {
     pub side: String,
 }
 
-impl OrderFilter for SIDE {
-    fn bf<'a>(
-        &self,
-        _: &[Option<&(Order, bool, Option<Trigger>)>],
-        _: &[f64],
-        _: &[Signal],
-        _: &TradeState,
-    ) -> BF_ORDER_FILTER<'a> {
-        Default::default()
+impl SIDE {
+    pub fn new(side: String) -> Self {
+        Self { side }
     }
+}
+
+impl OrderFilter for SIDE {
+    fn init_bf(&self) {}
     fn filter<'a>(
         &self,
-        _: &RefCell<MAP<&str, Vec<f64>>>,
         orders: &[Option<&'a (Order, bool, Option<Trigger>)>],
-        _: &[f64],
-        _: &[Signal],
-        _: &TradeState,
+        _src: &[f64],
+        _signals: &[Signal],
+        _state: &TradeState,
     ) -> Option<&'a (Order, bool, Option<Trigger>)> {
         let order_wrap = orders[0];
         if let Some(order) = order_wrap {
@@ -41,10 +38,15 @@ mod tests {
     #[test]
     fn filter_res_1() {
         assert_eq_pr!(
-            SIDE { side: "buy".to_string() }.filter(
-                &Default::default(),
+            SIDE {
+                side: "buy".to_string()
+            }
+            .filter(
                 &[Some(&(
-                    Order { side: "buy".to_string(), ..Default::default() },
+                    Order {
+                        side: "buy".to_string(),
+                        ..Default::default()
+                    },
                     Default::default(),
                     Default::default(),
                 ))],
@@ -53,7 +55,10 @@ mod tests {
                 &Default::default()
             ),
             Some(&(
-                Order { side: "buy".to_string(), ..Default::default() },
+                Order {
+                    side: "buy".to_string(),
+                    ..Default::default()
+                },
                 Default::default(),
                 Default::default(),
             ))
@@ -63,13 +68,10 @@ mod tests {
     #[test]
     fn filter_res_2() {
         assert_eq_pr!(
-            SIDE { side: "buy".to_string() }.filter(
-                &Default::default(),
-                &[Default::default()],
-                &[],
-                &[],
-                &Default::default()
-            ),
+            SIDE {
+                side: "buy".to_string()
+            }
+            .filter(&[Default::default()], &[], &[], &Default::default()),
             None
         )
     }
